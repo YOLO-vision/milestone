@@ -1247,10 +1247,19 @@ dialog::backdrop {
   overflow-wrap: anywhere;
 }
 
-.celebration-sub {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-sub);
+/* 「次へ」ボタン：「叶えた！」と同じ金色で、押したくなる大きさに */
+.celebration-next {
+  margin-top: 8px;
+  padding: 14px;
+  font-size: 17px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #f2b705 0%, #f08a24 100%);
+  border-radius: 999px;         /* 丸みの強いボタン */
+  box-shadow: 0 4px 12px rgba(240, 138, 36, 0.35);
+}
+
+.celebration-next:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #de7a17 100%);
 }
 
 /* 紙吹雪：画面の上から下へ、くるくる回りながら落ちる */

@@ -1550,8 +1550,8 @@ function celebrate(dream) {
   celebration.hidden = false;
 }
 
-// お祝いの画面は、どこをタップしても閉じる
-celebration.addEventListener("click", function () {
+// お祝いの画面の「次へ」：閉じて、続けて「達成の記録」の画面を開く
+document.getElementById("celebration-next").addEventListener("click", function () {
   celebration.hidden = true;
   confetti.textContent = "";
   showToast("「達成したこと」に移しました");
