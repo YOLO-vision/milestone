@@ -1,7 +1,7 @@
 {
   "name": "マイルストーン",
   "short_name": "マイルストーン",
-  "description": "やりたいことに期限をつけて、人生の年表（ロードマップ）にするアプリ",
+  "description": "叶えることに期限をつけて、人生の年表（ロードマップ）にするアプリ",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

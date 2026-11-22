@@ -474,8 +474,8 @@ function activeDreams() {
 
 // 一覧やロードマップが空のときのお知らせ（絞りこみ中ならそのこと、全部叶えたときは、ほめる）
 function emptyMessage(normal) {
-  if (filterCategory !== null) return "「" + filterCategory + "」の、まだ叶えていないやりたいことはありません";
-  return dreams.length > 0 ? "全部叶えました！新しいやりたいことを追加しましょう" : normal;
+  if (filterCategory !== null) return "「" + filterCategory + "」の叶えることは、今はありません";
+  return dreams.length > 0 ? "全部叶えました！新しい叶えることを追加しましょう" : normal;
 }
 
 // ===== 分野で絞りこみ =====
@@ -731,7 +731,7 @@ function makeWelcome() {
 
   const title = document.createElement("p");
   title.className = "welcome-title";
-  title.textContent = "最初のやりたいことを追加しよう";
+  title.textContent = "最初の叶えることを追加しよう";
 
   const text = document.createElement("p");
   text.className = "welcome-text";
@@ -755,7 +755,7 @@ function makeWelcome() {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "welcome-button";
-  button.textContent = "＋ やりたいことを追加";
+  button.textContent = "＋ 叶えることを追加";
   button.addEventListener("click", function () {
     addDialog.showModal();
   });
@@ -961,7 +961,7 @@ function renderStats() {
 // 「今までに叶えた」を押すと、下の「叶えたこと」を開いて、そこまで移動する
 statTotalButton.addEventListener("click", function () {
   if (!dreams.some(function (d) { return d.achievedAt; })) {
-    showToast("叶えたことは、まだありません。最初の1つを叶えましょう！");
+    showToast("達成したことは、まだありません。最初の1つを叶えましょう！");
     return;
   }
   if (filterCategory !== null) setFilter(null); // 絞りこみ中なら「すべて」に戻して、全部見せる
@@ -984,7 +984,7 @@ function renderRoadmap(birth, groups) {
     return;
   }
   if (shownDreams().length === 0) {
-    roadmap.appendChild(makeEmpty(emptyMessage("やりたいことを追加すると、ここに人生の地図ができます")));
+    roadmap.appendChild(makeEmpty(emptyMessage("叶えることを追加すると、ここに人生の地図ができます")));
     return;
   }
 
@@ -1202,7 +1202,7 @@ let dreamInDetail = null; // どのやりたいことの詳細を開いている
 const stepDeadline = setupDeadlineInputs("step", function (deadline) {
   if (!dreamInDetail || dreamInDetail.deadline === null) return "";
   if (deadlineEnd(deadline) > deadlineEnd(dreamInDetail.deadline)) {
-    return "※ やりたいことの期限（" + deadlineLabel(dreamInDetail.deadline, true) + "）より後です";
+    return "※ 叶えることの期限（" + deadlineLabel(dreamInDetail.deadline, true) + "）より後です";
   }
   return "";
 });
@@ -1399,7 +1399,7 @@ function celebrate(dream) {
 celebration.addEventListener("click", function () {
   celebration.hidden = true;
   confetti.textContent = "";
-  showToast("「叶えたこと」に移しました");
+  showToast("「達成したこと」に移しました");
 });
 
 // 「編集する」：詳細の画面を閉じて、編集の画面を開く
@@ -1447,7 +1447,7 @@ editForm.addEventListener("submit", function (event) {
 
 // 「削除」：押し間違えないように、1回目は「本当に削除する」に変わるだけ。2回目で消す
 function resetDeleteButton() {
-  deleteDreamButton.textContent = "このやりたいことを削除";
+  deleteDreamButton.textContent = "この叶えることを削除";
   deleteDreamButton.classList.remove("confirming");
 }
 
@@ -1688,7 +1688,7 @@ categoryForm.addEventListener("submit", function (event) {
 
   // 移すやりたいことがあるときは、1回目は確認だけ出す。もう一度押したら保存する
   if (movedCount > 0 && !confirmingMove) {
-    showCategoryMessage("「" + deletedNames.join("」「") + "」のやりたいこと " + movedCount + "件 は、「" + fallback + "」に移します。よければ、もう一度押してください。", true);
+    showCategoryMessage("「" + deletedNames.join("」「") + "」の叶えること " + movedCount + "件 は、「" + fallback + "」に移します。よければ、もう一度押してください。", true);
     saveCategoryButton.textContent = "移して保存する";
     confirmingMove = true;
     return;
@@ -1843,7 +1843,7 @@ importFileInput.addEventListener("change", async function () {
   const achievedCount = backup.dreams.filter(function (d) { return d.achievedAt; }).length;
   askConfirm(
     "バックアップから戻しますか？",
-    formatDate(parseDate(backup.savedAt)) + " に保存したバックアップ（やりたいこと " + backup.dreams.length + "件・うち叶えたこと " + achievedCount + "件）で、" +
+    formatDate(parseDate(backup.savedAt)) + " に保存したバックアップ（叶えること " + backup.dreams.length + "件・うち達成したこと " + achievedCount + "件）で、" +
       "今のデータをすべて置きかえます。今のデータは消えます。",
     "戻す",
     function () { restoreBackup(backup); }
