@@ -464,6 +464,7 @@ function render() {
   renderRoadmap(birth, groupEntries(true)); // ロードマップ：期限のあるステップも並べる
   renderAchieved(birth);                    // 叶えたこと
   renderStats();                            // 達成の記録
+  renderSide(birth);                        // PC の左の列
 }
 
 // まだ叶えていないやりたいこと（叶えたものには achievedAt に叶えた日が入っている）
@@ -836,6 +837,105 @@ function renderAchieved(birth) {
   for (const dream of achieved) achievedList.appendChild(makeDreamItem(dream, birth, true));
 }
 
+
+// ===== PC の左の列（もうすぐのやりたいこと・分野ごとのまとめ・叶えたこと） =====
+const upcomingCard = document.getElementById("upcoming-card");
+const upcomingList = document.getElementById("upcoming-list");
+const summaryCard = document.getElementById("summary-card");
+const summaryList = document.getElementById("summary-list");
+const sideAchieved = document.getElementById("side-achieved");
+
+// 「PC の広さかどうか」を調べる道具（style.css の @media (min-width: 900px) と同じ広さ）
+const pcQuery = window.matchMedia("(min-width: 900px)");
+
+// 「叶えたこと」の箱を、PC なら左の列に、スマホなら「やりたいこと」のカードの一番下に置く
+function placeAchievedBox() {
+  const target = pcQuery.matches ? sideAchieved : listCard;
+  if (achievedBox.parentElement !== target) target.appendChild(achievedBox);
+  sideAchieved.hidden = !pcQuery.matches || achievedBox.hidden;
+}
+// 画面の広さが変わったとき（ウィンドウの大きさを変えた・iPad を回した）も置き直す
+pcQuery.addEventListener("change", placeAchievedBox);
+
+// 左の列を描く関数（render から呼ぶ）
+function renderSide(birth) {
+  renderUpcoming(birth);
+  renderSummary();
+  placeAchievedBox();
+}
+
+// ⏰ もうすぐのやりたいこと：まだ叶えていなくて、期限が今日以降のものを、期限の近い順に3つ
+function renderUpcoming(birth) {
+  const today = todayDate();
+  const upcoming = activeDreams()
+    .filter(function (d) { return d.deadline !== null && deadlineEnd(d.deadline) >= today; })
+    .sort(compareDreams)
+    .slice(0, 3); // slice(0, 3) = 前から3つだけ取り出す
+  upcomingCard.hidden = upcoming.length === 0;
+  upcomingList.textContent = "";
+  for (const dream of upcoming) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "upcoming-item";
+    item.style.borderLeftColor = colorOf(dream.category); // 左の線は分野の色
+    const title = document.createElement("span");
+    title.className = "upcoming-title";
+    title.textContent = dream.title;
+    const date = document.createElement("span");
+    date.className = "upcoming-date";
+    date.textContent = deadlineLabel(dream.deadline, true) + "・" + remainingText(deadlineEnd(dream.deadline));
+    item.append(title, date);
+    item.addEventListener("click", function () { openDetail(dream); });
+    upcomingList.appendChild(item);
+  }
+}
+
+// 📊 分野ごとのまとめ：使っている分野ごとに「○件・叶えた○件」と、叶えた割合のバー
+function renderSummary() {
+  summaryList.textContent = "";
+  let shownCount = 0;
+  for (const category of categories) {
+    const all = dreams.filter(function (d) { return d.category === category.name; });
+    if (all.length === 0) continue; // やりたいことが無い分野は出さない
+    shownCount++;
+    const achieved = all.filter(function (d) { return d.achievedAt; }).length;
+
+    const row = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "summary-row";
+    if (filterCategory === category.name) button.classList.add("selected"); // 絞りこみ中の分野に印
+
+    const head = document.createElement("span");
+    head.className = "summary-head";
+    head.appendChild(makeDot(category.name));
+    const name = document.createElement("span");
+    name.className = "summary-name";
+    name.textContent = category.name;
+    const count = document.createElement("span");
+    count.className = "summary-count";
+    count.textContent = all.length + "件" + (achieved > 0 ? "・叶えた " + achieved : "");
+    head.append(name, count);
+
+    // 叶えた割合のバー（全部叶えたら、いっぱいになる）
+    const bar = document.createElement("span");
+    bar.className = "summary-bar";
+    const fill = document.createElement("span");
+    fill.className = "summary-fill";
+    fill.style.width = Math.round((achieved / all.length) * 100) + "%";
+    fill.style.backgroundColor = category.color;
+    bar.appendChild(fill);
+
+    button.append(head, bar);
+    // 押すと、その分野で絞りこむ（もう一度押すと「すべて」に戻す）
+    button.addEventListener("click", function () {
+      setFilter(filterCategory === category.name ? null : category.name);
+    });
+    row.appendChild(button);
+    summaryList.appendChild(row);
+  }
+  summaryCard.hidden = shownCount === 0;
+}
 // ===== 達成の記録 =====
 const statTotal = document.getElementById("stat-total");
 const statYear = document.getElementById("stat-year");

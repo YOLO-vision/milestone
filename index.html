@@ -91,6 +91,23 @@
   
       <!-- PC のときだけ出る「追加」ボタン（スマホは右下の丸い「＋」を使う） -->
       <button type="button" id="side-add-button" class="side-add-button" hidden>＋ やりたいことを追加</button>
+
+      <!-- ここから下の3つは PC のときだけ出る（pc-only） -->
+      <!-- 期限が近い順に3つ -->
+      <section id="upcoming-card" class="card side-card pc-only" hidden>
+        <h2 class="side-title">⏰ もうすぐのやりたいこと</h2>
+        <div id="upcoming-list"></div>
+      </section>
+
+      <!-- 分野ごとの件数と、叶えた割合（押すと、その分野で絞りこむ） -->
+      <section id="summary-card" class="card side-card pc-only" hidden>
+        <h2 class="side-title">📊 分野ごとのまとめ</h2>
+        <p class="side-note">バーは叶えた割合。押すとその分野で絞りこみます</p>
+        <ul id="summary-list" class="summary-list"></ul>
+      </section>
+
+      <!-- 「叶えたこと」の箱は、PC のときは script.js がここへ移す -->
+      <section id="side-achieved" class="card side-card pc-only" hidden></section>
     </div>
 
     <!-- ===== やりたいこと（一覧 / ロードマップ） ===== -->

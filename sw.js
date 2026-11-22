@@ -3,7 +3,7 @@
 // 「ネットにつながらないときは、前に保存しておいたファイルを使う」ようにする。
 
 // 保存場所（キャッシュ）の名前。仕組みを大きく変えたときは、末尾の数字を上げる
-const CACHE_NAME = "milestone-v3";
+const CACHE_NAME = "milestone-v4";
 
 // 最初にまとめて保存しておくファイルの一覧
 const FILES = [

@@ -1696,3 +1696,135 @@ button:disabled:hover {
     max-width: 340px;
   }
 }
+
+/* ===== PC の左の列のカード（もうすぐ・分野ごとのまとめ・叶えたこと） ===== */
+/* スマホでは出さない */
+.pc-only {
+  display: none;
+}
+
+.side-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+/* ⏰ もうすぐのやりたいこと：1つずつの小さいボタン */
+.upcoming-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: normal;
+  color: var(--text);
+  background-color: var(--surface);
+  border-left: 4px solid var(--border);
+  border-radius: 8px;
+}
+
+.upcoming-item:last-child {
+  margin-bottom: 0;
+}
+
+.upcoming-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.upcoming-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.upcoming-date {
+  font-size: 12px;
+  color: var(--main-dark);
+}
+
+/* 📊 分野ごとのまとめ */
+.summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-row {
+  display: block;
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: normal;
+  color: var(--text);
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.summary-row:hover,
+.summary-row.selected {
+  background-color: var(--main-light);
+}
+
+.summary-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.summary-count {
+  margin-left: auto;            /* 件数は右はしに */
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 叶えた割合のバー */
+.summary-bar {
+  display: block;
+  height: 5px;
+  margin: 4px 0 0 16px;         /* 丸の幅だけ右から始める */
+  background-color: var(--track);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.summary-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+
+@media (min-width: 900px) {
+  .pc-only {
+    display: block;
+  }
+
+  /* 左の列が画面より長くなったら、左の列の中だけスクロールする */
+  .side {
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding: 2px 4px 8px;       /* 影が切れないように少しすき間 */
+    margin: -2px -4px 0;
+    scrollbar-width: thin;
+  }
+
+  .side-add-button {
+    margin-bottom: 16px;
+  }
+
+  /* 左の列に移した「叶えたこと」：カードの中なので、上の線とすき間はいらない */
+  .side .achieved-box {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .side .achieved-box .dream-item {
+    padding: 8px 10px;
+  }
+}
+
+/* 左の列のカードの、見出しの下の小さい説明 */
+.side-note {
+  margin: -6px 0 8px;
+  font-size: 11px;
+  color: var(--text-sub);
+}
