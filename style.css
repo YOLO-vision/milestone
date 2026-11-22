@@ -1598,3 +1598,33 @@ button:disabled:hover {
   background-color: var(--danger);
   opacity: 0.9;
 }
+
+/* ===== 同期（メニューの中とログインのダイアログ） ===== */
+/* 「メールアドレス／自動で同期しています ✓」 */
+.sync-status {
+  margin: 0 0 4px 12px;
+  font-size: 13px;
+  color: var(--text-sub);
+  white-space: pre-line;        /* 文字の中の改行（\n）で、本当に改行する */
+  overflow-wrap: anywhere;      /* 長いメールアドレスは折り返す */
+}
+
+#login-dialog h2 {
+  margin-top: 0;
+}
+
+/* うまくいかなかったときの理由：うすい赤の箱 */
+.login-error {
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--danger);
+  background-color: var(--danger-light);
+  border-radius: 8px;
+}
+
+/* 「パスワードを忘れたとき」「閉じる」を横に並べる */
+.login-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}

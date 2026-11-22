@@ -56,6 +56,14 @@ let categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY)) || DEFAULT_CAT
 
 function saveCategories() {
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+  announceSaved();
+}
+
+// 「保存したよ」という合図（イベント）を出す関数。
+// 同期の係（sync.js）がこの合図を聞いて、Firebase にも送る。
+// （ログインしていないときは、合図を聞く人がいないので、何も起きない）
+function announceSaved() {
+  document.dispatchEvent(new CustomEvent("roadmap-saved"));
 }
 
 // 分野の色を返す関数（一覧にない分野ならグレー）
@@ -193,6 +201,7 @@ function saveProfile() {
 
 function saveDreams() {
   localStorage.setItem(DREAMS_KEY, JSON.stringify(dreams));
+  announceSaved();
 }
 
 // 前の版（「何歳までに」で入れていたデータ）を、日付の形に変える
@@ -1611,7 +1620,10 @@ const confirmOkButton = document.getElementById("confirm-ok");
 let confirmAction = null; // 「OK」を押したときにやること（関数）
 
 // 確認のダイアログを出す関数。okText = OKボタンの文字、action = OKを押したらやること
-function askConfirm(title, message, okText, action) {
+// onCancel = 「キャンセル」を押したらやること（なくてもよい）
+let cancelAction = null;
+function askConfirm(title, message, okText, action, onCancel) {
+  cancelAction = onCancel || null;
   confirmTitle.textContent = title;
   confirmMessage.textContent = message;
   confirmOkButton.textContent = okText;
@@ -1621,6 +1633,12 @@ function askConfirm(title, message, okText, action) {
 
 document.getElementById("confirm-cancel").addEventListener("click", function () {
   confirmDialog.close();
+  if (cancelAction) cancelAction();
+});
+
+// Esc キーで閉じたときも「キャンセル」と同じにする
+confirmDialog.addEventListener("cancel", function () {
+  if (cancelAction) cancelAction();
 });
 
 confirmOkButton.addEventListener("click", function () {
@@ -1756,6 +1774,40 @@ function restoreBackup(backup) {
   fillCategorySelects(); // 分野の選択肢を作り直す
   setFilter(null);       // 絞りこみを外して、描き直す
   showToast("バックアップから戻しました");
+}
+
+// ===== 同期で受け取ったデータで置きかえる（sync.js から呼ばれる） =====
+// data = { dreams: やりたいことの一覧, categories: 分野の一覧 }
+// ここでは「保存したよ」の合図を出さない（受け取ったデータを送り返さないため）
+function applyRemoteData(data) {
+  dreams = data.dreams;
+  categories = data.categories;
+  localStorage.setItem(DREAMS_KEY, JSON.stringify(dreams));
+  localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+  fillCategorySelects();
+
+  // 絞りこみ中の分野が無くなっていたら、絞りこみを外す
+  if (filterCategory !== null && !categories.some(function (c) { return c.name === filterCategory; })) {
+    filterCategory = null;
+    localStorage.removeItem(FILTER_KEY);
+  }
+
+  // 詳細や編集の画面を開いているときは、新しいデータの同じやりたいことに付けかえる
+  // （ほかの機械で消されていたら、画面を閉じる）
+  if (detailDialog.open) {
+    dreamInDetail = dreams.find(function (d) { return d.id === dreamInDetail.id; }) || null;
+    if (dreamInDetail) renderDetail(); else detailDialog.close();
+  }
+  if (editDialog.open) {
+    dreamToEdit = dreams.find(function (d) { return d.id === dreamToEdit.id; }) || null;
+    if (!dreamToEdit) editDialog.close();
+  }
+  render();
+}
+
+// この機械に、残しておきたいデータがあるか（やりたいことがある・分野を編集した）
+function hasLocalData() {
+  return dreams.length > 0 || localStorage.getItem(CATEGORIES_KEY) !== null;
 }
 // ===== 10. お知らせ（トースト） =====
 const toast = document.getElementById("toast");

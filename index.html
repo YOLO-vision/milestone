@@ -22,6 +22,12 @@
   <link rel="stylesheet" href="style.css">
   <!-- 動きの設定ファイル。defer = 画面の部品がそろってから動かす -->
   <script src="script.js" defer></script>
+  <!-- PC と iPhone の同期に使う Firebase（Google の無料サービス）。ログイン・データ置き場の部品を読み込む -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
+  <!-- 同期の係（script.js のあとに動く） -->
+  <script src="sync.js" defer></script>
 </head>
 <body>
   <!-- ===== いちばん上の帯：アプリの名前と、右上のメニューボタン ===== -->
@@ -254,6 +260,18 @@
     <!-- 生年月日を入れ直すボタン -->
     <button type="button" id="change-birthdate" class="menu-item">生年月日を変更</button>
 
+    <h3 class="drawer-section">PC と iPhone の同期</h3>
+    <!-- ログインしていないとき -->
+    <div id="sync-logged-out">
+      <button type="button" id="open-login" class="menu-item">ログイン / 新規登録</button>
+      <p class="menu-note">ログインすると、ほかの機械と自動でそろいます（家計簿と同じアカウントで使えます）</p>
+    </div>
+    <!-- ログインしているとき（hidden = 最初は隠しておく） -->
+    <div id="sync-logged-in" hidden>
+      <p id="sync-status" class="sync-status"></p>
+      <button type="button" id="logout" class="menu-item">ログアウト</button>
+    </div>
+
     <h3 class="drawer-section">バックアップ</h3>
     <button type="button" id="export-backup" class="menu-item">バックアップを保存</button>
     <!-- 最後に保存した日（script.js が書き換える） -->
@@ -276,6 +294,34 @@
       <div class="dialog-buttons">
         <button type="button" id="cancel-category" class="cancel-button">キャンセル</button>
         <button type="submit" id="save-category">保存する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== ログインのダイアログ ===== -->
+  <dialog id="login-dialog">
+    <form id="login-form">
+      <h2>ログイン / 新規登録</h2>
+      <p class="note">PC と iPhone で、同じメールアドレスとパスワードでログインしてください。家計簿で使っているアカウントでもログインできます。</p>
+      <p>
+        <label>メールアドレス<br>
+          <!-- autocomplete = iPhone などが、保存したメールアドレスやパスワードを入れてくれる -->
+          <input type="email" id="login-email" required autocomplete="username">
+        </label>
+      </p>
+      <p>
+        <label>パスワード（6文字以上）<br>
+          <input type="password" id="login-password" required minlength="6" autocomplete="current-password">
+        </label>
+      </p>
+      <!-- うまくいかなかったときの理由（sync.js が書き換える） -->
+      <p id="login-error" class="login-error" hidden></p>
+      <button type="submit" id="login-submit">ログイン</button>
+      <!-- 初めての人は「新しく登録」。押したボタンによって、ログインか登録かを見分ける -->
+      <button type="button" id="signup-submit" class="sub-button">はじめての方：この内容で新しく登録</button>
+      <div class="login-links">
+        <button type="button" id="reset-password" class="link-button">パスワードを忘れたとき</button>
+        <button type="button" id="cancel-login" class="link-button">閉じる</button>
       </div>
     </form>
   </dialog>

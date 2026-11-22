@@ -3,7 +3,7 @@
 // 「ネットにつながらないときは、前に保存しておいたファイルを使う」ようにする。
 
 // 保存場所（キャッシュ）の名前。仕組みを大きく変えたときは、末尾の数字を上げる
-const CACHE_NAME = "milestone-v1";
+const CACHE_NAME = "milestone-v2";
 
 // 最初にまとめて保存しておくファイルの一覧
 const FILES = [
@@ -11,6 +11,7 @@ const FILES = [
   "./index.html",
   "./style.css",
   "./script.js",
+  "./sync.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -46,7 +47,7 @@ self.addEventListener("activate", function (event) {
 // （ネット優先にしておくと、アプリを直したときに最新版がすぐ届く）
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return; // 読み込み以外は何もしない
-  // 外のサイトのファイル（今は使っていないが、あとで同期の Firebase などを足したとき）は、ふつうに読み込んでもらう
+  // 外のサイトのファイル（同期に使う Firebase など）は、ふつうに読み込んでもらう
   if (new URL(event.request.url).origin !== location.origin) return;
 
   event.respondWith(
