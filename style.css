@@ -1960,3 +1960,25 @@ button:disabled:hover {
   object-fit: cover;
   border-radius: 8px;
 }
+
+/* 家族を登録：「＋ 家族を追加」と「キャンセル・保存する」がくっつかないように、すき間をあける */
+#family-form .dialog-buttons {
+  margin-top: 16px;
+}
+
+/* ===== ダイアログやメニュー・お祝いの画面が出ているときは、後ろの画面をスクロールさせない ===== */
+/* :has(…) = 「中に … があるとき」。dialog[open] = 開いているダイアログ */
+html:has(dialog[open]),
+html:has(#celebration:not([hidden])) {
+  overflow: hidden;
+}
+
+body:has(dialog[open]),
+body:has(#celebration:not([hidden])) {
+  overflow: hidden;
+}
+
+/* ダイアログの中を下までスクロールしきっても、後ろの画面にスクロールが伝わらないようにする */
+dialog {
+  overscroll-behavior: contain;
+}
