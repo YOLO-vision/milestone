@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- マイルストーンのアイコン：青緑の背景に、上へ伸びる道と目じるし（丸）とゴールの旗 -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14b8a0"/>
+      <stop offset="1" stop-color="#0b7a6b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- 道（下から上へくねくね） -->
+  <path d="M150 512 C 150 420, 360 400, 340 320 S 170 250, 230 180 S 300 140, 300 130"
+        fill="none" stroke="#ffffff" stroke-opacity="0.95" stroke-width="54" stroke-linecap="round"/>
+  <path d="M150 512 C 150 420, 360 400, 340 320 S 170 250, 230 180 S 300 140, 300 130"
+        fill="none" stroke="#0f9d8a" stroke-width="6" stroke-dasharray="18 20" stroke-linecap="round"/>
+  <!-- 目じるし（マイルストーン） -->
+  <circle cx="250" cy="402" r="24" fill="#ffd257" stroke="#0b7a6b" stroke-width="8"/>
+  <circle cx="262" cy="262" r="24" fill="#ffd257" stroke="#0b7a6b" stroke-width="8"/>
+  <!-- ゴールの旗 -->
+  <line x1="300" y1="138" x2="300" y2="52" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+  <path d="M306 56 L 392 80 L 306 108 Z" fill="#ff7a59"/>
+  <circle cx="300" cy="138" r="16" fill="#ffffff"/>
+</svg>

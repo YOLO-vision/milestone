@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- 文字化けしないように、文字コードを指定 -->
+  <meta charset="UTF-8">
+  <!-- スマホの画面幅に合わせて表示する設定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- ブラウザのタブに表示される名前 -->
+  <title>マイルストーン</title>
+  <!-- アイコン：ブラウザのタブ用（icon）と、iPhone のホーム画面用（apple-touch-icon） -->
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- ホーム画面に追加したときの、アプリの名前・アイコン・色などの設定 -->
+  <link rel="manifest" href="manifest.json">
+  <!-- iPhone のホーム画面に追加したとき、アイコンの下に出る名前 -->
+  <meta name="apple-mobile-web-app-title" content="マイルストーン">
+  <!-- スマホの上の帯（ステータスバー）の色 -->
+  <meta name="theme-color" content="#0f9d8a" media="(prefers-color-scheme: light)">
+  <!-- ダークモードのときは、背景と同じ暗い色 -->
+  <meta name="theme-color" content="#0f1518" media="(prefers-color-scheme: dark)">
+  <!-- 見た目の設定ファイル -->
+  <link rel="stylesheet" href="style.css">
+  <!-- 動きの設定ファイル。defer = 画面の部品がそろってから動かす -->
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <!-- ===== いちばん上の帯：アプリの名前と、右上のメニューボタン ===== -->
+  <header class="app-header">
+    <!-- タイトルの左に小さいアイコン。alt="" = 飾りなので読み上げない -->
+    <h1><img src="icons/icon.svg" alt="" class="title-icon">マイルストーン</h1>
+    <!-- ハンバーガーメニューのボタン。3本の線（span）で「☰」の形を描く -->
+    <!-- aria-label = 画面の読み上げ機能に「メニュー」と伝える（見た目に文字がないため） -->
+    <button type="button" id="menu-button" class="menu-button" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- ===== 生年月日を入れる（最初の1回だけ出る） ===== -->
+    <!-- hidden = 最初は隠しておく。生年月日がまだなければ script.js が出す -->
+    <section id="setup-card" class="card" hidden>
+      <h2>はじめに</h2>
+      <p class="note">
+        生年月日を入れると、今の年齢と「○歳まであと何年」を計算します。<br>
+        生年月日はこのスマホの中だけに保存されます。<br>
+        バックアップがある人は、右上の ☰ →「バックアップから戻す」で戻せます。
+      </p>
+      <form id="setup-form">
+        <p>
+          <label>生年月日<br>
+            <input type="date" id="birthdate" required>
+          </label>
+        </p>
+        <button type="submit">はじめる</button>
+      </form>
+    </section>
+
+    <!-- ===== 今の年齢 ===== -->
+    <section id="age-card" class="card age-card" hidden>
+      <!-- 左：今の年齢。右：達成の記録。横1列に並べて、カードの高さをおさえる -->
+      <div class="age-now">
+        <p class="age-label">今</p>
+        <p class="age-value"><strong id="current-age">0</strong>歳</p>
+      </div>
+
+      <!-- 達成の記録（数字は script.js が入れる） -->
+      <div class="stats">
+        <!-- 押すと「叶えたこと」が開くので、ボタンにしている -->
+        <button type="button" id="stat-total-button" class="stat">
+          <strong id="stat-total">0</strong>
+          <span>今までに<br>叶えた</span>
+        </button>
+        <div class="stat">
+          <strong id="stat-year">0</strong>
+          <span>今年<br>叶えた</span>
+        </div>
+        <div class="stat">
+          <strong id="stat-steps">0</strong>
+          <span>できた<br>ステップ</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== やりたいこと（一覧 / ロードマップ） ===== -->
+    <section id="list-card" class="card" hidden>
+      <h2>やりたいこと <span id="dream-count" class="count"></span></h2>
+
+      <!-- 見え方の切り替え -->
+      <div class="view-switch">
+        <button type="button" id="show-list" class="view-button">一覧</button>
+        <button type="button" id="show-roadmap" class="view-button">ロードマップ</button>
+      </div>
+
+      <!-- 分野で絞りこむボタン（script.js が作る）。横に入りきらないときは横にスクロールする -->
+      <div id="filter-bar" class="filter-bar"></div>
+
+      <!-- 一覧の中身（script.js が作る） -->
+      <div id="dream-list"></div>
+      <!-- ロードマップ（年表）の中身（script.js が作る） -->
+      <div id="roadmap" class="roadmap" hidden></div>
+
+      <!-- 叶えたこと。<details> は押すと開く・閉じるができる箱 -->
+      <details id="achieved-box" class="achieved-box" hidden>
+        <summary>🏆 叶えたこと <span id="achieved-count" class="count"></span></summary>
+        <div id="achieved-list"></div>
+      </details>
+    </section>
+  </main>
+
+  <!-- ===== 右下の丸い「＋」ボタン（押すと、やりたいことを追加する画面が出る） ===== -->
+  <!-- hidden = 生年月日を入れるまでは隠しておく -->
+  <button type="button" id="add-button" class="fab" aria-label="やりたいことを追加" hidden>＋</button>
+
+  <!-- ===== やりたいことを追加するダイアログ（＋ボタンで出る） ===== -->
+  <dialog id="add-dialog">
+    <form id="dream-form">
+      <h2>やりたいことを追加</h2>
+      <p>
+        <label>やりたいこと・叶えたいこと<br>
+          <input type="text" id="dream-title" required maxlength="60" placeholder="例: 海外に1か月住む">
+        </label>
+      </p>
+      <div class="field">
+        <!-- 「分野」の文字と「分野を編集」ボタンを横に並べる -->
+        <div class="label-row">
+          <span class="field-label">分野</span>
+          <button type="button" id="open-category-editor" class="link-button">分野を編集</button>
+        </div>
+        <!-- 選択肢は script.js が作る。見た目は script.js が色の丸付きのプルダウンに置きかえる -->
+        <select id="dream-category"></select>
+      </div>
+      <!-- いつまでに：年だけ・年と月だけ・年月日、のどれでも登録できる -->
+      <div class="field">
+        <!-- 見出しは短く、説明は横に小さく。空欄のときは下の確認の文字に「いつか」と出る -->
+        <p class="field-label">いつまでに <span class="field-hint">年だけ・年と月だけでもOK</span></p>
+        <div class="date-inputs">
+          <!-- inputmode="numeric" = スマホで数字のキーボードを出す -->
+          <input type="number" id="dream-year" min="1900" max="2200" inputmode="numeric" placeholder="2030" aria-label="年">
+          <span>年</span>
+          <!-- 月と日の選択肢は script.js が作る -->
+          <select id="dream-month" aria-label="月"></select>
+          <span>月</span>
+          <select id="dream-day" aria-label="日"></select>
+          <span>日</span>
+        </div>
+        <!-- 「→ 2029年3月1日まで（このとき 25歳）」のような確認の文字 -->
+        <p id="dream-preview" class="preview"></p>
+      </div>
+      <p>
+        <label>メモ<br>
+          <textarea id="dream-memo" rows="2" placeholder="例: どこの国がいいか調べる"></textarea>
+        </label>
+      </p>
+      <div class="dialog-buttons">
+        <button type="button" id="cancel-add" class="cancel-button">キャンセル</button>
+        <button type="submit">追加する</button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <!-- ===== 詳細ダイアログ（やりたいことを押すと出る。小さなステップもここで） ===== -->
+  <dialog id="detail-dialog">
+    <div class="detail-head">
+      <span id="detail-category" class="category-chip"></span>
+      <h2 id="detail-title"></h2>
+      <p id="detail-deadline" class="detail-deadline"></p>
+      <p id="detail-memo" class="detail-memo"></p>
+      <!-- 叶えたときだけ出る「🎉 2026年11月22日に叶えた（22歳）」 -->
+      <p id="detail-achieved" class="achieved-banner" hidden></p>
+    </div>
+
+    <!-- 「叶えた！」ボタン（叶えたあとは「叶えたを取り消す」に変わる） -->
+    <button type="button" id="achieve-button" class="achieve-button">🎉 叶えた！</button>
+
+    <h3 class="detail-section">小さなステップ <span id="detail-progress-text" class="count"></span></h3>
+    <!-- 進み具合のバー（幅は script.js が決める） -->
+    <div class="progress"><div id="detail-progress-bar" class="progress-bar"></div></div>
+    <!-- ステップの一覧（script.js が作る） -->
+    <ul id="step-list" class="step-list"></ul>
+
+    <!-- ステップを追加 -->
+    <form id="step-form" class="step-form">
+      <p class="field-label">ステップを追加</p>
+      <input type="text" id="step-title" required maxlength="60" placeholder="例: アプリを3つ公開する">
+      <div class="date-inputs">
+        <input type="number" id="step-year" min="1900" max="2200" inputmode="numeric" placeholder="2028" aria-label="年">
+        <span>年</span>
+        <select id="step-month" aria-label="月"></select>
+        <span>月</span>
+        <select id="step-day" aria-label="日"></select>
+        <span>日</span>
+      </div>
+      <p id="step-preview" class="preview"></p>
+      <button type="submit" class="sub-button">＋ ステップを追加</button>
+    </form>
+
+    <div class="dialog-buttons">
+      <button type="button" id="close-detail" class="cancel-button">閉じる</button>
+      <button type="button" id="open-edit">編集する</button>
+    </div>
+  </dialog>
+
+  <!-- ===== 編集ダイアログ（詳細の「編集する」から出る） ===== -->
+  <dialog id="edit-dialog">
+    <form id="edit-form">
+      <h2>やりたいことを編集</h2>
+      <p>
+        <label>やりたいこと・叶えたいこと<br>
+          <input type="text" id="edit-title" required maxlength="60">
+        </label>
+      </p>
+      <div class="field">
+        <span class="field-label">分野</span>
+        <!-- 見た目は script.js が色の丸付きのプルダウンに置きかえる -->
+        <select id="edit-category"></select>
+      </div>
+      <div class="field">
+        <!-- 見出しは短く、説明は横に小さく。空欄のときは下の確認の文字に「いつか」と出る -->
+        <p class="field-label">いつまでに <span class="field-hint">年だけ・年と月だけでもOK</span></p>
+        <div class="date-inputs">
+          <input type="number" id="edit-year" min="1900" max="2200" inputmode="numeric" placeholder="2030" aria-label="年">
+          <span>年</span>
+          <select id="edit-month" aria-label="月"></select>
+          <span>月</span>
+          <select id="edit-day" aria-label="日"></select>
+          <span>日</span>
+        </div>
+        <p id="edit-preview" class="preview"></p>
+      </div>
+      <p>
+        <label>メモ<br>
+          <textarea id="edit-memo" rows="3"></textarea>
+        </label>
+      </p>
+      <div class="dialog-buttons">
+        <button type="button" id="cancel-edit" class="cancel-button">キャンセル</button>
+        <button type="submit">保存する</button>
+      </div>
+      <!-- 削除は押し間違えないように、下のほうに小さく置く -->
+      <button type="button" id="delete-dream" class="text-danger-button">このやりたいことを削除</button>
+    </form>
+  </dialog>
+
+  <!-- ===== メニュー（右から出てくる細長いパネル） ===== -->
+  <dialog id="menu-dialog" class="drawer">
+    <div class="drawer-header">
+      <h2>メニュー</h2>
+      <button type="button" id="close-menu" class="close-button" aria-label="閉じる">×</button>
+    </div>
+
+    <h3 class="drawer-section">設定</h3>
+    <button type="button" id="menu-categories" class="menu-item">分野を編集</button>
+    <!-- 生年月日を入れ直すボタン -->
+    <button type="button" id="change-birthdate" class="menu-item">生年月日を変更</button>
+
+    <h3 class="drawer-section">バックアップ</h3>
+    <button type="button" id="export-backup" class="menu-item">バックアップを保存</button>
+    <!-- 最後に保存した日（script.js が書き換える） -->
+    <p id="last-backup" class="menu-note"></p>
+    <button type="button" id="import-backup" class="menu-item">バックアップから戻す</button>
+    <!-- バックアップのファイルを選ぶ部品（見えなくしておき、上のボタンから開く） -->
+    <input type="file" id="import-file" accept="application/json,.json" class="visually-hidden">
+  </dialog>
+
+  <!-- ===== 分野を編集するダイアログ ===== -->
+  <dialog id="category-dialog">
+    <form id="category-form">
+      <h2>分野を編集</h2>
+      <p class="note">丸を押すと色を選べます。↑↓で並び順を変えられます。</p>
+      <!-- 分野の1行ずつ（script.js が作る） -->
+      <ul id="category-rows" class="category-rows"></ul>
+      <button type="button" id="add-category" class="sub-button">＋ 分野を追加</button>
+      <!-- 名前が空・同じ名前がある・やりたいことを移す、などのお知らせ -->
+      <p id="category-message" class="category-message" hidden></p>
+      <div class="dialog-buttons">
+        <button type="button" id="cancel-category" class="cancel-button">キャンセル</button>
+        <button type="submit" id="save-category">保存する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== 確認のダイアログ（バックアップから戻すときなど、取り消せないことの前に出す） ===== -->
+  <dialog id="confirm-dialog">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-message" class="confirm-message"></p>
+    <div class="dialog-buttons">
+      <button type="button" id="confirm-cancel" class="cancel-button">キャンセル</button>
+      <button type="button" id="confirm-ok" class="danger-button"></button>
+    </div>
+  </dialog>
+
+  <!-- ===== お祝いの画面（叶えたときに出る） ===== -->
+  <div id="celebration" class="celebration" hidden>
+    <!-- 紙吹雪は script.js がここに足す -->
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <div class="celebration-card">
+      <p class="celebration-emoji">🎉</p>
+      <p class="celebration-title">おめでとう！</p>
+      <p id="celebration-dream" class="celebration-dream"></p>
+      <p class="celebration-sub">タップして閉じる</p>
+    </div>
+  </div>
+
+  <!-- ===== お知らせ（トースト） ===== -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+</body>
+</html>

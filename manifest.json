@@ -1,0 +1,23 @@
+{
+  "name": "マイルストーン",
+  "short_name": "マイルストーン",
+  "description": "やりたいことに期限をつけて、人生の年表（ロードマップ）にするアプリ",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f6",
+  "theme_color": "#0f9d8a",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1600 @@
+/* ===== テーマの色 ===== */
+/* 色に名前を付けておき、下では var(--main) のように名前で使う。ここを直せば全体の色が変わる */
+:root {
+  --main: #0f9d8a;          /* 青緑（ボタン・見出しなど） */
+  --main-dark: #0b7a6b;     /* 濃い青緑（マウスを乗せたとき・白地の上の文字） */
+  --main-light: #e6f6f3;    /* うすい青緑（背景） */
+  --text: #263238;          /* 文字 */
+  --text-sub: #6b7780;      /* うすめの文字 */
+  --line: #e3e8eb;          /* 線 */
+  --danger: #c0392b;        /* 赤（削除・期限切れ） */
+  --danger-light: #fdecea;  /* うすい赤（背景） */
+  --bg: #f1f5f6;            /* ページの背景・うすい灰色のボタン */
+  --card: #ffffff;          /* カード・ダイアログ・入力欄 */
+  --surface: #f7f9fa;       /* カードの中の、やりたいことの背景 */
+  --surface-hover: #eef3f5; /* 上をマウスが通ったとき */
+  --gray: #e4e9ec;          /* キャンセルのボタン・切り替えの背景 */
+  --gray-hover: #d5dde1;
+  --track: #dde5e8;         /* 進み具合のバーの、まだのところ */
+  --border: #cfd8dc;        /* 入力欄のふち */
+  --disabled: #b0bec5;      /* 選べないとき */
+  --dashed: #b8c8cc;        /* 「いつか」の点線 */
+  --gold-text: #9a5b00;     /* 叶えたことの文字（こげ茶） */
+  --gold-light: #fff6dc;    /* 叶えたことの背景（うすい黄色） */
+  --gold-bg: #fffaeb;
+  --toast: #333333;         /* お知らせの背景 */
+  /* 入力欄やプルダウンの、ブラウザが描く部分（▼など）も、明るい・暗いに合わせる */
+  color-scheme: light dark;
+}
+
+/* ===== ダークモード（iPhone を「ダーク」の設定にしているとき） ===== */
+/* prefers-color-scheme: dark = 「暗い画面がいい」という設定のときだけ、色の名前の中身を入れかえる */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --main: #12a893;
+    --main-dark: #4fd1bd;     /* 暗い背景の上の文字なので、明るめの青緑にする */
+    --main-light: #133a35;
+    --text: #e4eaec;
+    --text-sub: #9aa8af;
+    --line: #2d3b41;
+    --danger: #ef6b5e;
+    --danger-light: #3d2220;
+    --bg: #0f1518;
+    --card: #1a2327;
+    --surface: #222d32;
+    --surface-hover: #29363c;
+    --gray: #2b373d;
+    --gray-hover: #354349;
+    --track: #33424a;
+    --border: #3a4a52;
+    --disabled: #5c6d75;
+    --dashed: #4a5c64;
+    --gold-text: #f5c060;
+    --gold-light: #3a2f15;
+    --gold-bg: #2a2412;
+    --toast: #e4eaec;
+  }
+}
+
+/* ===== ページ全体 ===== */
+* {
+  box-sizing: border-box;   /* 幅にすき間や枠線も含めて計算する */
+}
+
+body {
+  margin: 0 auto;
+  max-width: 520px;         /* スマホの幅くらい。PC でも横に広がりすぎないように */
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: 1.6;
+}
+
+/* いちばん上の帯：メニューボタンを、この帯を基準に右はしへ置く */
+.app-header {
+  position: relative;
+}
+
+.app-header h1 {
+  margin: 8px 0 16px;
+  padding: 0 48px;              /* 右のメニューボタンと重ならないように、左右をあける */
+  text-align: center;
+  font-size: 24px;
+  line-height: 44px;            /* メニューボタンと同じ高さにして、横一列にそろえる */
+  color: var(--main);
+}
+
+/* タイトルの左の小さいアイコン（角を丸くして、iPhone のアイコンっぽく） */
+.title-icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+  border-radius: 8px;
+  vertical-align: -6px;         /* 文字の高さの真ん中にそろえる */
+}
+
+/* ☰ ボタン：帯の右はし、タイトルと同じ高さに置く */
+.menu-button {
+  position: absolute;
+  right: 0;
+  top: 8px;                     /* タイトルの上のすき間と同じ */
+  width: 44px;                  /* 指で押しやすい大きさ */
+  height: 44px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;       /* 3本の線を縦に並べる */
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background-color: transparent;
+}
+
+.menu-button:hover {
+  background-color: var(--main-light);
+}
+
+/* 3本の線の1本1本 */
+.menu-button span {
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--text);
+}
+
+/* ===== メニュー（右から出てくるパネル） ===== */
+/* 下の dialog の設定（画面の真ん中・角丸）を上書きして、右はしに縦長に置く */
+dialog.drawer {
+  margin: 0 0 0 auto;           /* 左のすき間を自動にして、右に寄せる */
+  width: 80%;
+  max-width: 300px;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 16px 0 0 16px; /* 左側の角だけ丸く */
+  padding: 16px;
+  overflow-y: auto;             /* 項目が多くて入りきらないときは、メニューの中をスクロール */
+  animation: slide-in 0.25s ease-out; /* 開くときに右からすべり込む */
+}
+
+/* 右の外から、元の位置まで動かす動き */
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-header h2 {
+  margin: 0;
+}
+
+/* × ボタン */
+.close-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 24px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background-color: transparent;
+}
+
+.close-button:hover {
+  background-color: var(--bg);
+}
+
+/* 「設定」などの小見出し */
+.drawer-section {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin: 24px 0 8px;
+}
+
+/* メニューの項目：文字だけの、左ぞろえのボタン */
+.menu-item {
+  display: block;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text);
+  background-color: transparent;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background-color: var(--bg);
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+/* ===== 白いカード ===== */
+.card {
+  background-color: var(--card);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* hidden を付けたものは確実に隠す */
+[hidden] {
+  display: none !important;
+}
+
+.note {
+  font-size: 14px;
+  color: var(--text-sub);
+  margin: 0 0 12px;
+}
+
+/* ===== 入力欄 ===== */
+form p {
+  margin: 0 0 14px;
+}
+
+label {
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px;
+  font-size: 16px;          /* iPhone で自動ズームされない大きさ */
+  font-family: inherit;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--card);
+}
+
+/* 「いつまでに」のまとまり */
+.field {
+  margin: 0 0 14px;
+}
+
+.field-label {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+/* 「[2029] 年 [3] 月 [1] 日」：横1列に並べる */
+.date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 画面の小さい iPhone（SE など）でも横1列に入るように、細めにする */
+.date-inputs input {
+  width: 84px;
+  flex-shrink: 0;
+}
+
+.date-inputs select {
+  width: 68px;
+  flex-shrink: 0;
+}
+
+.date-inputs span {
+  margin-top: 4px;
+  color: var(--text);
+}
+
+/* 選べないとき（年がまだ空など）はうすくする */
+.date-inputs select:disabled {
+  background-color: var(--bg);
+  color: var(--disabled);
+}
+
+/* 「→ 2029年3月1日まで（このとき 25歳）」 */
+.preview {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--main-dark);
+}
+
+/* 日付がおかしいとき：赤 */
+.preview.error {
+  color: var(--danger);
+}
+
+/* ===== ボタン ===== */
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: var(--main);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: var(--main-dark);
+}
+
+/* 文字だけの小さなボタン */
+.link-button {
+  width: auto;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background-color: transparent;
+}
+
+.link-button:hover {
+  background-color: var(--bg);
+}
+
+/* ===== 今の年齢 ===== */
+.age-card {
+  /* 左に年齢、右に記録を横1列に並べる */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--main) 0%, #3bb3c3 100%); /* 青緑から水色へ */
+  color: #ffffff;
+}
+
+/* 左の年齢のまとまり：縮めない */
+.age-now {
+  flex-shrink: 0;
+  min-width: 72px;
+}
+
+.age-label {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.age-value {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;          /* 「22歳」を2行に折り返さない */
+}
+
+.age-value strong {
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+/* ===== 達成の記録 ===== */
+/* 3つの数字を、同じ幅で横に並べる */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  flex: 1;                      /* 残りの幅を全部使う */
+  margin: 0;
+}
+
+/* 数字1つ分：すけた白い四角 */
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 2px;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  font-weight: normal;
+}
+
+/* 「今までに叶えた」は押せるボタンなので、上の button の設定（幅・色）を上書きする */
+button.stat {
+  width: auto;
+  font-size: inherit;
+}
+
+button.stat:hover {
+  background-color: rgba(255, 255, 255, 0.26);
+}
+
+.stat strong {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.stat span {
+  margin-top: 1px;
+  font-size: 10px;
+  line-height: 1.35;
+  opacity: 0.9;
+}
+
+.age-card .link-button {
+  color: #ffffff;
+  opacity: 0.85;
+}
+
+.age-card .link-button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ===== やりたいこと一覧 ===== */
+.count {
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--text-sub);
+}
+
+/* 「30歳まで」などのまとまりの見出し */
+.group-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 20px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--main-light);
+}
+
+.group-title:first-child {
+  margin-top: 4px;
+}
+
+.group-age {
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--main-dark);
+}
+
+.group-remaining {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 期限をすぎたもの：赤 */
+.group-title.overdue .group-age,
+.group-title.overdue .group-remaining {
+  color: var(--danger);
+}
+
+/* やりたいこと1つ分（押すと編集できるので、ボタンにしている） */
+.dream-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 12px;
+  text-align: left;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text);
+  background-color: var(--surface);
+  border-left: 5px solid #cccccc; /* 左の太い線（色は分野の色。script.js が決める） */
+  border-radius: 8px;
+}
+
+.dream-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.dream-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.dream-title {
+  display: block;
+  font-weight: bold;
+  overflow-wrap: anywhere;  /* 長い文字は折り返す */
+}
+
+/* 「3月1日まで・あと2年3か月（25歳）」 */
+.dream-date {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--main-dark);
+}
+
+.dream-date.overdue {
+  color: var(--danger);
+}
+
+.dream-memo {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-sub);
+  white-space: nowrap;      /* メモは1行だけ。はみ出たら「…」 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 分野の札（色は script.js が決める） */
+.category-chip {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  border-radius: 999px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-sub);
+  font-size: 14px;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ===== 一覧とロードマップの切り替えボタン ===== */
+/* 2つのボタンを、つながった1本の帯のように並べる */
+.view-switch {
+  display: flex;
+  background-color: var(--gray);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+
+.view-button {
+  flex: 1;                      /* 2つのボタンを同じ幅に */
+  padding: 6px;
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background-color: transparent;
+  border-radius: 6px;
+}
+
+.view-button:hover {
+  background-color: var(--gray-hover);
+}
+
+/* 選んでいるほう：白く浮き上がらせる */
+.view-button.active {
+  background-color: var(--card);
+  color: var(--main-dark);
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== 分野で絞りこむボタン ===== */
+/* 横1列に並べて、入りきらないときは横にスクロール */
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 0 -16px 14px;         /* カードの左右のすき間まで広げて、はしまでスクロールできるように */
+  padding: 0 16px 4px;
+  scrollbar-width: none;        /* スクロールバーを隠す（指で横に動かせる） */
+}
+
+.filter-bar::-webkit-scrollbar {
+  display: none;                /* iPhone・Chrome でもスクロールバーを隠す */
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: auto;
+  flex-shrink: 0;               /* 縮めずに、はみ出た分はスクロール */
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--text);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  background-color: var(--bg);
+}
+
+/* 選んでいるボタン：「すべて」はテーマの色、分野は分野の色（script.js が決める） */
+.filter-chip.selected {
+  color: #ffffff;
+  background-color: var(--main);
+  border-color: transparent;
+  font-weight: bold;
+}
+
+.filter-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+/* 選んでいるときは、丸を白くする（ボタンが分野の色になるので） */
+.filter-chip.selected .filter-dot {
+  background-color: #ffffff !important;
+}
+
+/* 件数：小さく、うすく */
+.filter-count {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ===== ロードマップ（年表） ===== */
+/* 年表の本体。左に縦の線を引いて、点やすき間を右に並べる */
+.timeline {
+  position: relative;
+  padding-left: 28px;           /* 左の線と点のための場所 */
+}
+
+/* 縦の線：::before = 中身の前に、CSS だけで飾りを足す書き方 */
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  bottom: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--main) 0%, #3bb3c3 100%); /* 上から下へ、青緑から水色へ */
+}
+
+/* 点と点の間のすき間（高さは script.js が年数に合わせて決める） */
+.timeline-gap {
+  position: relative;
+}
+
+/* 「3年」のような、あいている年数 */
+.gap-label {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);  /* 上下の真ん中に */
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 線の上の点（年齢）1つ分 */
+.timeline-point {
+  position: relative;
+}
+
+/* 線の上の丸：点の左に置く */
+.timeline-point::before {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 6px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: var(--card);
+  border: 3px solid var(--main);
+  box-sizing: border-box;
+}
+
+/* 「今」の丸：大きく、中まで塗る。まわりにうすい輪 */
+.timeline-point.now::before {
+  left: -29px;
+  top: 3px;
+  width: 21px;
+  height: 21px;
+  background-color: var(--main);
+  border-color: var(--card);
+  box-shadow: 0 0 0 4px var(--main-light);
+}
+
+/* 期限をすぎた目標：赤 */
+.timeline-point.overdue::before {
+  border-color: var(--danger);
+}
+
+.timeline-point.overdue .point-title,
+.timeline-point.overdue .point-sub {
+  color: var(--danger);
+}
+
+/* 「25歳」のような大きな文字 */
+.point-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--main-dark);
+  line-height: 1.5;
+}
+
+.timeline-point.now .point-title {
+  font-size: 20px;
+  color: var(--main);
+}
+
+/* 「2029年3月・あと2年3か月」の小さな文字 */
+.point-sub {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 年表の中のやりたいことは、少しだけ小さく */
+.timeline-point .dream-item {
+  margin-bottom: 6px;
+}
+
+/* いつか：年表の下に、点線でつなげて置く */
+.someday {
+  margin-top: 8px;
+  padding: 12px 0 0 28px;
+  border-left: 3px dashed var(--dashed); /* 点線（まだ決まっていない、という意味） */
+  margin-left: 9px;
+  padding-left: 19px;
+}
+
+.someday-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-sub);
+}
+
+/* ===== ダイアログ ===== */
+dialog {
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  border: none;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  color: var(--text);
+  background-color: var(--card);
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.cancel-button {
+  color: var(--text);
+  background-color: var(--gray);
+}
+
+.cancel-button:hover {
+  background-color: var(--gray-hover);
+}
+
+/* 削除：赤い文字だけのボタン */
+.text-danger-button {
+  display: block;
+  width: auto;
+  margin: 16px auto 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--danger);
+  background-color: transparent;
+}
+
+.text-danger-button:hover {
+  background-color: var(--danger-light);
+}
+
+/* 「本当に削除する」の確認中：赤いボタンにする */
+.text-danger-button.confirming {
+  color: #ffffff;
+  background-color: var(--danger);
+}
+
+/* ===== 進み具合 ===== */
+/* 一覧のやりたいことの下の「ステップ 2/4 ■■□□」 */
+.dream-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 小さなバー：うすい灰色の上に、青緑を進んだ分だけ塗る */
+.mini-bar {
+  flex: 1;
+  max-width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--track);
+  overflow: hidden;
+}
+
+.mini-bar span {
+  display: block;
+  height: 100%;
+  background-color: var(--main);
+}
+
+/* 詳細の画面の大きなバー */
+.progress {
+  height: 10px;
+  border-radius: 5px;
+  background-color: var(--track);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--main) 0%, #3bb3c3 100%);
+  transition: width 0.4s;       /* チェックしたとき、するっと伸びる */
+}
+
+/* ===== 詳細ダイアログ ===== */
+#detail-dialog {
+  max-height: 90vh;
+  overflow-y: auto;             /* ステップが多いときは、中をスクロール */
+}
+
+.detail-head .category-chip {
+  display: inline-block;
+}
+
+.detail-head h2 {
+  margin: 8px 0 4px;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.detail-deadline {
+  margin: 0;
+  font-size: 14px;
+  color: var(--main-dark);
+}
+
+.detail-memo {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--text-sub);
+  background-color: var(--surface);
+  border-radius: 8px;
+  white-space: pre-wrap;        /* メモの改行を、そのまま出す */
+}
+
+.detail-section {
+  margin: 20px 0 8px;
+  font-size: 15px;
+}
+
+/* ステップの一覧 */
+.step-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* チェックの四角と名前：押せる範囲を広くする */
+.step-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.step-label input {
+  width: 22px;
+  height: 22px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+  accent-color: var(--main);    /* チェックの色をテーマの色に */
+}
+
+.step-text {
+  min-width: 0;
+}
+
+.step-title {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+/* できたステップ：うすくして、線を引く */
+.step-row.done .step-title {
+  color: var(--text-sub);
+  text-decoration: line-through;
+}
+
+/* × ボタン */
+.step-remove {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background-color: transparent;
+}
+
+.step-remove:hover {
+  background-color: var(--bg);
+}
+
+/* ステップを追加する場所 */
+.step-form {
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: var(--surface);
+  border-radius: 10px;
+}
+
+.step-form > input {
+  margin-bottom: 8px;
+}
+
+/* 白地に青緑の枠のボタン */
+.sub-button {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--main-dark);
+  background-color: var(--card);
+  border: 1px solid var(--main);
+}
+
+.sub-button:hover {
+  background-color: var(--main-light);
+}
+
+/* やりたいことの期限より後、などの注意：オレンジ */
+.preview.warning {
+  color: #c77700;
+}
+
+/* ===== ロードマップの上のステップ ===== */
+/* やりたいことより小さめにして、右に少しずらす */
+.step-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: calc(100% - 16px);
+  margin: 0 0 6px 16px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--text);
+  background-color: var(--card);
+  border: 1px dashed var(--border);   /* 点線のふち（ステップだとわかるように） */
+  border-left: 4px solid #cccccc; /* 左の線は、やりたいことの分野の色（script.js が決める） */
+  border-radius: 8px;
+}
+
+.step-entry:hover {
+  background-color: var(--surface);
+}
+
+/* チェックの丸 */
+.step-mark {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 2px solid var(--disabled);
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  color: #ffffff;
+}
+
+/* できたステップ：丸を塗って ✓、名前に線 */
+.step-entry.done .step-mark {
+  background-color: var(--main);
+  border-color: var(--main);
+}
+
+.step-entry.done .step-entry-title {
+  color: var(--text-sub);
+  text-decoration: line-through;
+}
+
+.step-entry-title {
+  display: block;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+/* 「↳ 自分のアプリで収入を得る」：どのやりたいことのステップか */
+.step-entry-parent {
+  display: block;
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== 叶えた！ ===== */
+/* 詳細の画面の「🎉 叶えた！」ボタン：金色っぽいグラデーション */
+.achieve-button {
+  margin-top: 14px;
+  background: linear-gradient(135deg, #f2b705 0%, #f08a24 100%);
+  box-shadow: 0 4px 12px rgba(240, 138, 36, 0.3);
+}
+
+.achieve-button:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #de7a17 100%);
+}
+
+/* 「叶えたを取り消す」：目立たない、文字だけのボタン */
+.achieve-button.undo {
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background: var(--bg);
+  box-shadow: none;
+}
+
+/* 「🎉 2026年11月22日に叶えた（22歳）」 */
+.achieved-banner {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--gold-text);
+  background-color: var(--gold-light);
+  border-radius: 8px;
+}
+
+/* 叶えたこと（押すと開く・閉じるができる箱） */
+.achieved-box {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.achieved-box summary {
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px 0 8px;
+}
+
+/* 叶えたやりたいこと：うすい金色の背景 */
+.dream-item.achieved {
+  background-color: var(--gold-bg);
+}
+
+.dream-item.achieved .dream-title::before {
+  content: "✓ ";
+  color: #f08a24;
+}
+
+.achieved-date {
+  color: var(--gold-text);
+}
+
+/* ===== 分野を編集 ===== */
+/* 「分野」の文字と「分野を編集」ボタンを横に並べる（ボタンは右はし） */
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label-row .link-button {
+  color: var(--main-dark);
+}
+
+#category-dialog {
+  max-height: 85vh;
+  overflow-y: auto;             /* 分野が多いときは、中をスクロール */
+}
+
+.category-rows {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+/* 1行：色の丸・名前・↑・↓・× を横に並べる */
+.category-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;              /* 色の一覧は、次の行に折り返して出す */
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.category-row input {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+  padding: 8px;
+}
+
+/* 色の丸（押せる） */
+.color-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid var(--card);
+  box-shadow: 0 0 0 1px var(--border); /* 白いふちの外に、うすい灰色の線 */
+}
+
+/* ↑ ↓ × の小さなボタン */
+.icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: normal;
+  color: var(--text-sub);
+  background-color: var(--bg);
+}
+
+.icon-button:hover {
+  background-color: var(--gray);
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* 色の一覧：行の下に、10色の丸を並べる */
+.palette {
+  flex-basis: 100%;
+  /* 15色を「5色 × 3段」にきれいに並べる */
+  display: grid;
+  grid-template-columns: repeat(5, 28px);
+  justify-content: space-evenly;
+  gap: 12px 10px;
+  padding: 10px;
+  background-color: var(--surface);
+  border-radius: 8px;
+}
+
+.swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* 今の色：外側に黒い輪 */
+.swatch.selected {
+  box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--text);
+}
+
+/* 名前が空などのエラー（赤）／やりたいことを移す確認（オレンジ） */
+.category-message {
+  margin: 12px 0 0;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--danger);
+  background-color: var(--danger-light);
+  border-radius: 8px;
+}
+
+.category-message.warning {
+  color: var(--gold-text);
+  background-color: var(--gold-light);
+}
+
+#category-form .dialog-buttons {
+  margin-top: 16px;
+}
+
+/* ===== お祝いの画面 ===== */
+/* 画面いっぱいに、うす暗い背景を広げる */
+.celebration {
+  position: fixed;
+  inset: 0;                     /* 上下左右いっぱい */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.celebration-card {
+  position: relative;
+  z-index: 1;                   /* 紙吹雪より手前 */
+  width: 80%;
+  max-width: 320px;
+  padding: 28px 20px;
+  text-align: center;
+  background-color: var(--card);
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  animation: pop 0.5s ease-out; /* ぽんっと出てくる */
+}
+
+/* 小さい状態から、少し大きくなって、元の大きさに */
+@keyframes pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  70%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.celebration-emoji {
+  margin: 0;
+  font-size: 56px;
+  line-height: 1.2;
+}
+
+.celebration-title {
+  margin: 8px 0 4px;
+  font-size: 26px;
+  font-weight: bold;
+  color: #f08a24;
+}
+
+.celebration-dream {
+  margin: 0 0 16px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.celebration-sub {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 紙吹雪：画面の上から下へ、くるくる回りながら落ちる */
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards; /* 落ちきったら、そのまま（画面の外） */
+}
+
+@keyframes fall {
+  to {
+    top: 110%;
+    transform: rotate(720deg) translateX(40px);
+  }
+}
+
+/* ===== お知らせ（トースト） ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 16px);
+  max-width: calc(100% - 32px);
+  padding: 12px 20px;
+  border-radius: 24px;
+  background-color: var(--toast);
+  color: var(--card);
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 10;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ===== 色の丸が付いた、自作のプルダウン（分野を選ぶところ） ===== */
+/* 分野の色の小さな丸 */
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;               /* つぶれないように */
+}
+
+/* 全体の入れ物。開いた一覧を、この入れ物を基準にすぐ下へ置くため */
+.picker {
+  position: relative;
+  margin-top: 4px;
+}
+
+/* 閉じているときに見える欄：ほかの入力欄と同じ見た目にする */
+/* （上の「button」の設定＝青緑・太字を上書きする） */
+.picker-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;                     /* 丸と文字のすき間 */
+  padding: 10px;
+  font-size: 16px;
+  font-weight: normal;
+  font-family: inherit;
+  color: var(--text);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+}
+
+/* 右はしの「▼」。::after = 中身の後ろに、CSS だけで飾りを足す書き方 */
+.picker-button::after {
+  content: "▼";
+  margin-left: auto;            /* 残りのすき間を左に取って、右はしに寄せる */
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.picker-button:hover,
+.picker-button[aria-expanded="true"] {
+  background-color: var(--card);    /* マウスを乗せても青緑にしない */
+  border-color: var(--main);
+}
+
+/* 押すと開く一覧：欄のすぐ下に浮かべて、下の入力欄の上に重ねる */
+.picker-list {
+  position: absolute;
+  top: 100%;                    /* 入れ物のすぐ下 */
+  left: 0;
+  right: 0;
+  z-index: 5;                   /* 下の入力欄より手前に出す */
+  max-height: 260px;            /* 分野が多いときは、一覧の中をスクロール */
+  overflow-y: auto;
+  list-style: none;             /* 箇条書きの「・」を消す */
+  margin: 4px 0 0 0;
+  padding: 4px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 一覧の1行 */
+.picker-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--text);
+  background-color: transparent;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.picker-option:hover {
+  background-color: var(--main-light);
+}
+
+/* 今選んでいる行：うすい青緑の背景と太字 */
+.picker-option.selected {
+  background-color: var(--main-light);
+  font-weight: bold;
+}
+
+/* ===== 右下の丸い「＋」ボタン ===== */
+/* position: fixed = スクロールしても、画面の同じ場所に浮かんだまま */
+.fab {
+  position: fixed;
+  /* PC でも、アプリの幅（520px）の中の右下に来るようにする */
+  right: max(20px, calc(50% - 260px + 20px));
+  /* iPhone の下のバー（ホームに戻る線）に重ならないように、そのぶん上げる */
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  z-index: 8;                   /* 一覧より手前、お知らせ（トースト）より奥 */
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border-radius: 50%;           /* 丸くする */
+  font-size: 34px;
+  font-weight: normal;
+  line-height: 60px;
+  box-shadow: 0 6px 16px rgba(15, 157, 138, 0.45);
+}
+
+/* 押している間は、少し小さくして「押した感じ」を出す */
+.fab:active {
+  transform: scale(0.94);
+}
+
+/* 一番下のやりたいことが「＋」に隠れないように、ページの下にすき間をあける */
+main {
+  padding-bottom: 80px;
+}
+
+/* 追加のダイアログ：入りきらないときは中をスクロール */
+#add-dialog {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* 追加のダイアログの見出しの上のすき間をつめる */
+#add-dialog h2,
+#edit-dialog h2 {
+  margin-top: 0;
+}
+
+/* 見出しの横の、小さい説明（「年だけ・年と月だけでもOK」） */
+.field-hint {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--text-sub);
+  opacity: 0.85;
+}
+
+/* ===== はじめての案内（やりたいことが0件のとき） ===== */
+.welcome {
+  padding: 12px 4px 4px;
+  text-align: center;
+}
+
+.welcome-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(15, 157, 138, 0.3);
+}
+
+.welcome-title {
+  margin: 12px 0 4px;
+  font-size: 17px;
+  font-weight: bold;
+  color: var(--main-dark);
+}
+
+.welcome-text {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 例のボタン：横に並べて、入りきらなければ折り返す */
+.welcome-examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.welcome-example {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--main-dark);
+  background-color: var(--main-light);
+  border-radius: 999px;
+}
+
+.welcome-example:hover {
+  background-color: var(--main-light);
+  opacity: 0.8;
+}
+
+/* ===== 細かい動き ===== */
+/* ダイアログ：下から少し浮き上がりながら、ふわっと出る（右から出るメニューは除く） */
+dialog[open]:not(.drawer) {
+  animation: dialog-in 0.22s ease-out;
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ダイアログの後ろの暗いところも、ふわっと暗くなる */
+dialog[open]::backdrop {
+  animation: fade-in 0.22s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ボタンを押している間は、少しだけ小さくして「押した感じ」を出す */
+button {
+  transition: transform 0.1s, background-color 0.15s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* 大きいもの（やりたいこと）は、へこみ方を控えめに */
+.dream-item:active,
+.step-entry:active {
+  transform: scale(0.99);
+}
+
+/* 追加したやりたいことを、青緑のふちで2回光らせる */
+.flash {
+  animation: flash 1.6s ease-out;
+}
+
+@keyframes flash {
+  0%, 50%  { box-shadow: 0 0 0 0 rgba(15, 157, 138, 0); background-color: var(--main-light); }
+  25%, 75% { box-shadow: 0 0 0 4px rgba(15, 157, 138, 0.45); background-color: var(--main-light); }
+  100%     { box-shadow: 0 0 0 0 rgba(15, 157, 138, 0); }
+}
+
+/* 「動きを減らす」の設定にしている人には、動きを出さない */
+@media (prefers-reduced-motion: reduce) {
+  dialog[open]:not(.drawer),
+  dialog[open]::backdrop,
+  dialog.drawer,
+  .flash {
+    animation: none;
+  }
+  button:active {
+    transform: none;
+  }
+}
+
+/* 押せないボタン（分野が上限まで来たときの「＋ 分野を追加」など）：うすくして、押せないとわかるように */
+button:disabled,
+button:disabled:hover {
+  color: var(--text-sub);
+  background-color: var(--bg);
+  border-color: var(--border);
+  cursor: default;
+  transform: none;
+}
+
+/* ===== バックアップ（メニューの中） ===== */
+/* 「最後に保存：…」の小さい文字 */
+.menu-note {
+  margin: -4px 0 6px 12px;      /* 上のボタンに少し寄せる */
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* ファイルを選ぶ部品は、見えなくしておく（ボタンから開く）。
+   display: none だと開けないスマホがあるので、大きさを0にして隠す */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ===== 確認のダイアログ ===== */
+#confirm-dialog h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+
+.confirm-message {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+/* 取り消せないことをするボタン：赤 */
+.danger-button {
+  background-color: var(--danger);
+}
+
+.danger-button:hover {
+  background-color: var(--danger);
+  opacity: 0.9;
+}
