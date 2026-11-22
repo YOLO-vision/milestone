@@ -90,12 +90,12 @@
       </section>
   
       <!-- PC のときだけ出る「追加」ボタン（スマホは右下の丸い「＋」を使う） -->
-      <button type="button" id="side-add-button" class="side-add-button" hidden>＋ 叶えることを追加</button>
+      <button type="button" id="side-add-button" class="side-add-button" hidden>＋ マイルストーンを追加</button>
 
       <!-- ここから下の3つは PC のときだけ出る（pc-only） -->
       <!-- 期限が近い順に3つ -->
       <section id="upcoming-card" class="card side-card pc-only" hidden>
-        <h2 class="side-title">⏰ もうすぐの叶えること</h2>
+        <h2 class="side-title">⏰ もうすぐのマイルストーン</h2>
         <div id="upcoming-list"></div>
       </section>
 
@@ -112,7 +112,7 @@
 
     <!-- ===== やりたいこと（一覧 / ロードマップ） ===== -->
     <section id="list-card" class="card" hidden>
-      <h2>叶えること <span id="dream-count" class="count"></span></h2>
+      <h2>マイルストーン <span id="dream-count" class="count"></span></h2>
 
       <!-- 見え方の切り替え -->
       <div class="view-switch">
@@ -138,14 +138,14 @@
 
   <!-- ===== 右下の丸い「＋」ボタン（押すと、やりたいことを追加する画面が出る） ===== -->
   <!-- hidden = 生年月日を入れるまでは隠しておく -->
-  <button type="button" id="add-button" class="fab" aria-label="叶えることを追加" hidden>＋</button>
+  <button type="button" id="add-button" class="fab" aria-label="マイルストーンを追加" hidden>＋</button>
 
   <!-- ===== やりたいことを追加するダイアログ（＋ボタンで出る） ===== -->
   <dialog id="add-dialog">
     <form id="dream-form">
-      <h2>叶えることを追加</h2>
+      <h2>マイルストーンを追加</h2>
       <p>
-        <label>叶えること<br>
+        <label>マイルストーン<br>
           <input type="text" id="dream-title" required maxlength="60" placeholder="例: 海外に1か月住む">
         </label>
       </p>
@@ -233,9 +233,9 @@
   <!-- ===== 編集ダイアログ（詳細の「編集する」から出る） ===== -->
   <dialog id="edit-dialog">
     <form id="edit-form">
-      <h2>叶えることを編集</h2>
+      <h2>マイルストーンを編集</h2>
       <p>
-        <label>叶えること<br>
+        <label>マイルストーン<br>
           <input type="text" id="edit-title" required maxlength="60">
         </label>
       </p>
@@ -267,7 +267,7 @@
         <button type="submit">保存する</button>
       </div>
       <!-- 削除は押し間違えないように、下のほうに小さく置く -->
-      <button type="button" id="delete-dream" class="text-danger-button">この叶えることを削除</button>
+      <button type="button" id="delete-dream" class="text-danger-button">このマイルストーンを削除</button>
     </form>
   </dialog>
 
