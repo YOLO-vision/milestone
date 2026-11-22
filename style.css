@@ -1628,3 +1628,71 @@ button:disabled:hover {
   justify-content: space-between;
   margin-top: 8px;
 }
+
+/* ===== PC の画面（横が広いとき）：左に年齢と追加ボタン、右にロードマップ ===== */
+/* スマホのときは、PC 用の「追加」ボタンは出さない（右下の丸い「＋」を使う） */
+.side-add-button {
+  display: none;
+}
+
+/* min-width: 900px = 画面の横幅が 900px 以上のとき（PC・iPad の横向きなど）だけ使う設定 */
+@media (min-width: 900px) {
+  body {
+    max-width: 1100px;          /* スマホの幅（520px）から広げる */
+    padding: 24px 32px;
+  }
+
+  /* 中身を「左の列 340px ｜ 右の列 残り全部」の2列にする */
+  main {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;         /* 列の高さを中身に合わせる（左の列を下まで伸ばさない） */
+    padding-bottom: 24px;       /* 右下の「＋」が無いので、下のすき間は小さくてよい */
+  }
+
+  /* 「はじめに」（生年月日を入れる）は、2列にまたがって真ん中に */
+  #setup-card {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  /* 左の列：スクロールしても、上にくっついて見えたままにする */
+  .side {
+    position: sticky;
+    top: 16px;
+  }
+
+  #list-card {
+    margin-bottom: 0;
+  }
+
+  /* PC では右下の丸い「＋」の代わりに、左の列のボタンを使う */
+  .fab {
+    display: none;
+  }
+
+  .side-add-button {
+    display: block;
+    padding: 14px;
+    box-shadow: 0 4px 12px rgba(15, 157, 138, 0.3);
+  }
+
+  /* ダイアログも少し広く */
+  dialog {
+    max-width: 480px;
+  }
+
+  /* 分野のボタン：PC は横に広いので、横スクロールではなく折り返して全部見せる */
+  .filter-bar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  /* メニューは、PC では右はしから少し広めに */
+  dialog.drawer {
+    max-width: 340px;
+  }
+}

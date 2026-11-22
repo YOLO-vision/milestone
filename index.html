@@ -48,7 +48,7 @@
       <h2>はじめに</h2>
       <p class="note">
         生年月日を入れると、今の年齢と「○歳まであと何年」を計算します。<br>
-        生年月日はこのスマホの中だけに保存されます。<br>
+        生年月日はこの機械（スマホ・PC）の中だけに保存されます。<br>
         バックアップがある人は、右上の ☰ →「バックアップから戻す」で戻せます。
       </p>
       <form id="setup-form">
@@ -61,31 +61,37 @@
       </form>
     </section>
 
-    <!-- ===== 今の年齢 ===== -->
-    <section id="age-card" class="card age-card" hidden>
-      <!-- 左：今の年齢。右：達成の記録。横1列に並べて、カードの高さをおさえる -->
-      <div class="age-now">
-        <p class="age-label">今</p>
-        <p class="age-value"><strong id="current-age">0</strong>歳</p>
-      </div>
-
-      <!-- 達成の記録（数字は script.js が入れる） -->
-      <div class="stats">
-        <!-- 押すと「叶えたこと」が開くので、ボタンにしている -->
-        <button type="button" id="stat-total-button" class="stat">
-          <strong id="stat-total">0</strong>
-          <span>今までに<br>叶えた</span>
-        </button>
-        <div class="stat">
-          <strong id="stat-year">0</strong>
-          <span>今年<br>叶えた</span>
+    <!-- ===== 左の列（PC のときだけ左に並ぶ。スマホでは、ふつうに上から順に並ぶ） ===== -->
+    <div class="side">
+      <!-- ===== 今の年齢 ===== -->
+      <section id="age-card" class="card age-card" hidden>
+        <!-- 左：今の年齢。右：達成の記録。横1列に並べて、カードの高さをおさえる -->
+        <div class="age-now">
+          <p class="age-label">今</p>
+          <p class="age-value"><strong id="current-age">0</strong>歳</p>
         </div>
-        <div class="stat">
-          <strong id="stat-steps">0</strong>
-          <span>できた<br>ステップ</span>
+  
+        <!-- 達成の記録（数字は script.js が入れる） -->
+        <div class="stats">
+          <!-- 押すと「叶えたこと」が開くので、ボタンにしている -->
+          <button type="button" id="stat-total-button" class="stat">
+            <strong id="stat-total">0</strong>
+            <span>今までに<br>叶えた</span>
+          </button>
+          <div class="stat">
+            <strong id="stat-year">0</strong>
+            <span>今年<br>叶えた</span>
+          </div>
+          <div class="stat">
+            <strong id="stat-steps">0</strong>
+            <span>できた<br>ステップ</span>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+  
+      <!-- PC のときだけ出る「追加」ボタン（スマホは右下の丸い「＋」を使う） -->
+      <button type="button" id="side-add-button" class="side-add-button" hidden>＋ やりたいことを追加</button>
+    </div>
 
     <!-- ===== やりたいこと（一覧 / ロードマップ） ===== -->
     <section id="list-card" class="card" hidden>

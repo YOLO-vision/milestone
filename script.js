@@ -8,6 +8,7 @@ const changeBirthdateButton = document.getElementById("change-birthdate");
 const addButton = document.getElementById("add-button");   // 右下の「＋」
 const addDialog = document.getElementById("add-dialog");   // やりたいことを追加するダイアログ
 const cancelAddButton = document.getElementById("cancel-add");
+const sideAddButton = document.getElementById("side-add-button"); // PC のときだけ出る「追加」ボタン
 const listCard = document.getElementById("list-card");
 
 const dreamForm = document.getElementById("dream-form");
@@ -448,6 +449,7 @@ function render() {
   setupCard.hidden = hasBirthdate;
   ageCard.hidden = !hasBirthdate;
   addButton.hidden = !hasBirthdate;
+  sideAddButton.hidden = !hasBirthdate;
   listCard.hidden = !hasBirthdate;
   if (!hasBirthdate) return;
 
@@ -1025,6 +1027,9 @@ changeBirthdateButton.addEventListener("click", function () {
 // ===== 8. やりたいことを追加 =====
 // 右下の「＋」を押したら、追加のダイアログを開く
 addButton.addEventListener("click", function () {
+  addDialog.showModal();
+});
+sideAddButton.addEventListener("click", function () {
   addDialog.showModal();
 });
 
