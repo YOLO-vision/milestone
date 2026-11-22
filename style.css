@@ -1828,3 +1828,135 @@ button:disabled:hover {
   font-size: 11px;
   color: var(--text-sub);
 }
+
+/* ===== 家族の年齢 ===== */
+/* ロードマップの年の点・一覧の見出しの下の「ゆい 3〜4歳・母 60〜61歳」 */
+.point-family {
+  margin: -8px 0 8px;           /* 上の行（自分の年齢）にくっつける */
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+.group-family {
+  flex-basis: 100%;             /* 見出しの下に、改行して出す */
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--text-sub);
+}
+
+/* 詳細ダイアログの「このとき 👪 ゆい 4歳・母 61歳」 */
+.detail-family {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 家族を登録するダイアログ：1行に「呼び名・生年月日・×」 */
+#family-dialog {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+#family-dialog h2 {
+  margin-top: 0;
+}
+
+.family-rows {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.family-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.family-row input[type="text"] {
+  flex: 1;
+  min-width: 0;                 /* 狭い画面でも、はみ出さずに縮む */
+  margin-top: 0;
+}
+
+.family-row input[type="date"] {
+  width: 150px;
+  flex-shrink: 0;
+  margin-top: 0;
+}
+
+/* ===== 達成の記録（感想と写真） ===== */
+/* 詳細の画面の中の、記録の箱 */
+.record-box {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: var(--gold-bg);
+  border-radius: 10px;
+}
+
+/* 写真：横幅いっぱい、角を丸く。縦長の写真でも高くなりすぎないように */
+.record-photo {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.record-note {
+  margin: 0 0 6px;
+  font-size: 14px;
+  white-space: pre-wrap;        /* 感想の改行を、そのまま出す */
+}
+
+.record-edit {
+  color: var(--gold-text);
+}
+
+#record-dialog {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+#record-dialog h2 {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+.record-dream {
+  margin: 0 0 8px;
+  font-weight: bold;
+  color: var(--gold-text);
+}
+
+.record-photo-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-photo-buttons .sub-button {
+  margin-top: 4px;
+}
+
+.record-photo-buttons .link-button {
+  flex-shrink: 0;
+}
+
+/* 一覧の、達成したことの感想（1行だけ。長いときは「…」） */
+.achieved-note {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 一覧の、達成の写真の小さい版 */
+.dream-thumb {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 8px;
+}

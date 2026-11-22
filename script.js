@@ -200,6 +200,113 @@ function saveProfile() {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
 }
 
+
+// ===== 達成したときの写真 =====
+// 写真は大きいので、やりたいことのデータとは別の場所に、1枚ずつ保存する
+//   この機械の中： "roadmap-photo-（やりたいことの id）" に、小さくした写真（data URL の文字）
+//   同期のとき：  Firebase の users/{uid}/apps/roadmap/photos/（id） に1枚ずつ（sync.js）
+const PHOTO_PREFIX = "roadmap-photo-";
+
+// 写真を読む（なければ null）
+function loadPhoto(dreamId) {
+  return localStorage.getItem(PHOTO_PREFIX + dreamId);
+}
+
+// 写真を保存する（data = null なら消す）。silent = true なら「保存したよ」の合図を出さない（同期で受け取ったとき）
+// 保存する場所がいっぱいで保存できなかったら false を返す
+function savePhoto(dreamId, data, silent) {
+  try {
+    if (data) {
+      localStorage.setItem(PHOTO_PREFIX + dreamId, data);
+    } else {
+      localStorage.removeItem(PHOTO_PREFIX + dreamId);
+    }
+  } catch (error) {
+    showToast("写真を保存する場所がいっぱいです。ほかの写真を外してから試してください");
+    return false;
+  }
+  if (!silent) document.dispatchEvent(new CustomEvent("roadmap-photo-saved", { detail: { dreamId: dreamId } }));
+  return true;
+}
+
+// この機械にある写真を、全部 { id: 写真 } の形で返す
+function allPhotos() {
+  const photos = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith(PHOTO_PREFIX)) photos[key.slice(PHOTO_PREFIX.length)] = localStorage.getItem(key);
+  }
+  return photos;
+}
+
+// この機械の写真を、全部入れかえる（バックアップから戻す・同期で受け取ったとき）
+function replaceAllPhotos(photos, silent) {
+  for (const id of Object.keys(allPhotos())) {
+    if (!photos[id]) savePhoto(id, null, silent);
+  }
+  for (const id of Object.keys(photos)) savePhoto(id, photos[id], silent);
+}
+
+// 選んだ写真を、長い辺が 640px になるまで小さくして、JPEG の文字（data URL）にする
+// （そのままだと 1枚 数MB あって、保存する場所がすぐにいっぱいになるため）
+function resizeImage(file) {
+  return new Promise(function (resolve, reject) {
+    const image = new Image();
+    const url = URL.createObjectURL(file);
+    image.onload = function () {
+      const scale = Math.min(1, 640 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.72)); // 0.72 = 画質（0〜1）。見た目をあまり落とさずに小さくする
+    };
+    image.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error("写真を読み込めませんでした"));
+    };
+    image.src = url;
+  });
+}
+// ===== 家族（年表に、家族の年齢も出す） =====
+// 1人ずつ { id: 見分けるための記号, name: 呼び名, birthdate: "YYYY-MM-DD" }
+// 生年月日なので、自分の生年月日と同じく、この機械の中だけに保存する（同期では送らない。バックアップには入る）
+const FAMILY_KEY = "roadmap-family";
+const MAX_FAMILY = 10; // 何人まで登録できるか
+let family = JSON.parse(localStorage.getItem(FAMILY_KEY)) || [];
+
+function saveFamily() {
+  localStorage.setItem(FAMILY_KEY, JSON.stringify(family));
+}
+
+// ある日の、家族の年齢を「ゆい 4歳・母 61歳」の形で返す（まだ生まれていない人は出さない）
+function familyAgesOn(date) {
+  const parts = [];
+  for (const person of family) {
+    const birth = parseDate(person.birthdate);
+    if (date < birth) continue;
+    parts.push(person.name + " " + ageOn(birth, date) + "歳");
+  }
+  return parts.join("・");
+}
+
+// ある年の、家族の年齢を「ゆい 3〜4歳・母 60〜61歳」の形で返す
+// その年に生まれる人は「ゆい 誕生」、その年より後に生まれる人は出さない
+function familyAgesInYear(year) {
+  const parts = [];
+  for (const person of family) {
+    const birth = parseDate(person.birthdate);
+    if (birth.getFullYear() > year) continue;
+    if (birth.getFullYear() === year) {
+      parts.push(person.name + " 誕生");
+    } else {
+      parts.push(person.name + " " + agesInYear(birth, year));
+    }
+  }
+  return parts.join("・");
+}
+
 function saveDreams() {
   localStorage.setItem(DREAMS_KEY, JSON.stringify(dreams));
   announceSaved();
@@ -385,7 +492,9 @@ function setupDeadlineInputs(prefix, warn) {
       preview.textContent = warn ? "→ 期限なし" : "→「いつか」に入ります";
     } else if (profile.birthdate) {
       const age = ageOn(parseDate(profile.birthdate), deadlineEnd(result.deadline));
-      preview.textContent = "→ " + deadlineLabel(result.deadline, true) + "（このとき " + age + "歳）";
+      // 家族を登録していれば「（このとき 自分 25歳・ゆい 5歳）」のように家族の年齢も出す
+      const familyText = familyAgesOn(deadlineEnd(result.deadline));
+      preview.textContent = "→ " + deadlineLabel(result.deadline, true) + "（このとき " + (familyText ? "自分 " + age + "歳・" + familyText : age + "歳") + "）";
       // 注意があれば、後ろに足して、色を変える
       const warning = warn ? warn(result.deadline) : "";
       if (warning) {
@@ -642,6 +751,11 @@ function agesInYear(birth, year) {
   return first === last ? first + "歳" : first + "〜" + last + "歳";
 }
 
+// 自分の、ある年の年齢。家族を登録しているときは「自分 25〜26歳」と、だれの年齢かを付ける
+function selfAgesInYear(birth, year) {
+  return (family.length > 0 ? "自分 " : "") + agesInYear(birth, year);
+}
+
 // やりたいこと1つ分の見た目を作る関数（押すと編集ダイアログが開く）
 // withYear = 期限の文字に年も書くか
 function makeDreamItem(dream, birth, withYear) {
@@ -666,6 +780,13 @@ function makeDreamItem(dream, birth, withYear) {
     date.className = "dream-date achieved-date";
     date.textContent = achievedLabel(dream, birth);
     text.appendChild(date);
+    // 達成の記録の感想があれば「💬 感想」
+    if (dream.achievedNote) {
+      const note = document.createElement("span");
+      note.className = "dream-memo achieved-note";
+      note.textContent = "💬 " + dream.achievedNote;
+      text.appendChild(note);
+    }
   } else if (dream.deadline !== null) {
     const end = deadlineEnd(dream.deadline);
     const date = document.createElement("span");
@@ -702,7 +823,17 @@ function makeDreamItem(dream, birth, withYear) {
   chip.style.backgroundColor = colorOf(dream.category);
   chip.textContent = dream.category;
 
-  item.append(text, chip);
+  item.append(text);
+  // 達成の写真があれば、小さく出す
+  const photo = dream.achievedAt ? loadPhoto(dream.id) : null;
+  if (photo) {
+    const thumb = document.createElement("img");
+    thumb.className = "dream-thumb";
+    thumb.src = photo;
+    thumb.alt = "";
+    item.appendChild(thumb);
+  }
+  item.appendChild(chip);
   item.addEventListener("click", function () {
     openDetail(dream);
   });
@@ -778,8 +909,8 @@ function renderList(birth, groups) {
     addListGroup("期限をすぎたもの", "", true, groups.overdue.map(function (e) { return makeEntry(e, birth, true); }));
   }
   for (const group of groups.years) {
-    addListGroup(group.year + "年", agesInYear(birth, group.year), false,
-      group.items.map(function (e) { return makeEntry(e, birth, false); }));
+    addListGroup(group.year + "年", selfAgesInYear(birth, group.year), false,
+      group.items.map(function (e) { return makeEntry(e, birth, false); }), familyAgesInYear(group.year));
   }
   if (groups.someday.length > 0) {
     addListGroup("いつか", "期限を決めると、上に並びます", false,
@@ -788,7 +919,8 @@ function renderList(birth, groups) {
 }
 
 // 一覧に、1つのまとまり（見出し＋やりたいこと）を足す関数
-function addListGroup(title, sub, isOverdue, items) {
+// familyText = 家族の年齢（なくてもよい）。あれば見出しの下にもう1行出す
+function addListGroup(title, sub, isOverdue, items, familyText) {
   const heading = document.createElement("div");
   heading.className = "group-title";
   if (isOverdue) heading.classList.add("overdue");
@@ -799,6 +931,12 @@ function addListGroup(title, sub, isOverdue, items) {
   subText.className = "group-remaining";
   subText.textContent = sub;
   heading.append(titleText, subText);
+  if (familyText) {
+    const familyLine = document.createElement("span");
+    familyLine.className = "group-family";
+    familyLine.textContent = familyText;
+    heading.appendChild(familyLine);
+  }
   dreamList.appendChild(heading);
   for (const item of items) dreamList.appendChild(item);
 }
@@ -1047,7 +1185,8 @@ function makeGap(before, after) {
 }
 
 // 点の見出し（「2029年」など）を作る関数
-function makePointHeading(point, titleText, subText) {
+// familyText = 家族の年齢（なければ "" か省略）。あれば、その下にもう1行出す
+function makePointHeading(point, titleText, subText, familyText) {
   const title = document.createElement("p");
   title.className = "point-title";
   title.textContent = titleText;
@@ -1055,6 +1194,12 @@ function makePointHeading(point, titleText, subText) {
   sub.className = "point-sub";
   sub.textContent = subText;
   point.append(title, sub);
+  if (familyText) {
+    const familyLine = document.createElement("p");
+    familyLine.className = "point-family";
+    familyLine.textContent = familyText;
+    point.appendChild(familyLine);
+  }
 }
 
 // 「今」の点
@@ -1063,7 +1208,7 @@ function makeNowPoint(birth) {
   point.className = "timeline-point now";
   const today = todayDate();
   makePointHeading(point, "今 " + ageOn(birth, today) + "歳",
-    today.getFullYear() + "年" + (today.getMonth() + 1) + "月" + today.getDate() + "日");
+    today.getFullYear() + "年" + (today.getMonth() + 1) + "月" + today.getDate() + "日", familyAgesOn(today));
   return point;
 }
 
@@ -1080,7 +1225,7 @@ function makeOverduePoint(birth, items) {
 function makeYearPoint(birth, group) {
   const point = document.createElement("div");
   point.className = "timeline-point";
-  makePointHeading(point, group.year + "年", agesInYear(birth, group.year));
+  makePointHeading(point, group.year + "年", selfAgesInYear(birth, group.year), familyAgesInYear(group.year));
   for (const entry of group.items) point.appendChild(makeEntry(entry, birth, false));
   return point;
 }
@@ -1188,6 +1333,7 @@ const detailCategory = document.getElementById("detail-category");
 const detailTitle = document.getElementById("detail-title");
 const detailDeadline = document.getElementById("detail-deadline");
 const detailMemo = document.getElementById("detail-memo");
+const detailFamily = document.getElementById("detail-family");
 const detailProgressText = document.getElementById("detail-progress-text");
 const detailProgressBar = document.getElementById("detail-progress-bar");
 const stepList = document.getElementById("step-list");
@@ -1233,15 +1379,23 @@ function renderDetail() {
   detailMemo.textContent = dream.memo;
   detailMemo.hidden = dream.memo === "";
 
+  // 家族の年齢（叶えたなら叶えた日、まだなら期限の最後の日。いつかなら出さない）
+  const familyDate = dream.achievedAt ? parseDate(dream.achievedAt) : (dream.deadline ? deadlineEnd(dream.deadline) : null);
+  const familyText = familyDate ? familyAgesOn(familyDate) : "";
+  detailFamily.textContent = "このとき 👪 " + familyText;
+  detailFamily.hidden = familyText === "";
+
   // 叶えたかどうかで、表示とボタンを変える
   if (dream.achievedAt) {
     detailAchieved.textContent = "🎉 " + achievedLabel(dream, birth);
     detailAchieved.hidden = false;
+    renderDetailRecord(dream); // 達成の記録（感想と写真）
     if (dream.deadline !== null) detailDeadline.textContent = "期限：" + deadlineLabel(dream.deadline, true);
     achieveButton.textContent = "叶えたを取り消す";
     achieveButton.classList.add("undo");
   } else {
     detailAchieved.hidden = true;
+    detailRecord.hidden = true;
     achieveButton.textContent = "🎉 叶えた！";
     achieveButton.classList.remove("undo");
   }
@@ -1370,6 +1524,7 @@ achieveButton.addEventListener("click", function () {
   render();
   detailDialog.close(); // お祝いの画面を、ダイアログより手前に出すため、先に閉じる
   celebrate(dream);
+  lastCelebrated = dream; // お祝いの画面を閉じたら、記録の画面を開く
 });
 
 // お祝いの画面を出す関数
@@ -1400,8 +1555,123 @@ celebration.addEventListener("click", function () {
   celebration.hidden = true;
   confetti.textContent = "";
   showToast("「達成したこと」に移しました");
+  // 続けて「達成の記録」（感想・写真）の画面を開く。書かないときは「あとで」
+  if (lastCelebrated) {
+    openRecord(lastCelebrated, false);
+    lastCelebrated = null;
+  }
 });
 
+
+// ===== 達成の記録（叶えたときの、ひとこと感想と写真） =====
+const detailRecord = document.getElementById("detail-record");
+const detailRecordPhoto = document.getElementById("detail-record-photo");
+const detailRecordNote = document.getElementById("detail-record-note");
+const openRecordButton = document.getElementById("open-record");
+const recordDialog = document.getElementById("record-dialog");
+const recordForm = document.getElementById("record-form");
+const recordDream = document.getElementById("record-dream");
+const recordNote = document.getElementById("record-note");
+const recordPhotoPreview = document.getElementById("record-photo-preview");
+const choosePhotoButton = document.getElementById("choose-photo");
+const removePhotoButton = document.getElementById("remove-photo");
+const photoFile = document.getElementById("photo-file");
+
+let dreamToRecord = null;     // どのやりたいことの記録を書いているか
+let draftPhoto = null;        // ダイアログで選んでいる写真（保存するまでは、ここだけ）
+let recordFromDetail = false; // 詳細の画面から開いたか（閉じたら詳細に戻る）
+let lastCelebrated = null;    // お祝いの画面を出したやりたいこと（閉じたら記録の画面を開く）
+
+// 詳細の画面の「達成の記録」を描く
+function renderDetailRecord(dream) {
+  const photo = loadPhoto(dream.id);
+  detailRecordPhoto.hidden = !photo;
+  if (photo) detailRecordPhoto.src = photo;
+  const note = dream.achievedNote || "";
+  detailRecordNote.textContent = note;
+  detailRecordNote.hidden = note === "";
+  openRecordButton.textContent = photo || note ? "✏️ 記録を編集" : "✏️ 達成の記録を書く（感想・写真）";
+  detailRecord.hidden = false;
+}
+
+// 記録のダイアログを開く
+function openRecord(dream, fromDetail) {
+  dreamToRecord = dream;
+  recordFromDetail = fromDetail;
+  recordDream.textContent = "「" + dream.title + "」";
+  recordNote.value = dream.achievedNote || "";
+  draftPhoto = loadPhoto(dream.id);
+  renderRecordPhoto();
+  recordDialog.showModal();
+}
+
+// ダイアログの写真の部分を描く
+function renderRecordPhoto() {
+  recordPhotoPreview.hidden = !draftPhoto;
+  if (draftPhoto) recordPhotoPreview.src = draftPhoto;
+  removePhotoButton.hidden = !draftPhoto;
+  choosePhotoButton.textContent = draftPhoto ? "📷 写真を選び直す" : "📷 写真を選ぶ";
+}
+
+// 詳細の「記録を書く／編集」
+openRecordButton.addEventListener("click", function () {
+  const dream = dreamInDetail;
+  detailDialog.close();
+  openRecord(dream, true);
+});
+
+// 「写真を選ぶ」：写真を選ぶ画面を開く（iPhone では「写真ライブラリ」「写真を撮る」などを選べる）
+choosePhotoButton.addEventListener("click", function () {
+  photoFile.click();
+});
+
+// 写真が選ばれたら、小さくしてから見せる
+photoFile.addEventListener("change", async function () {
+  const file = photoFile.files[0];
+  photoFile.value = ""; // 同じ写真をもう一度選んでも動くように
+  if (!file) return;
+  try {
+    draftPhoto = await resizeImage(file);
+    renderRecordPhoto();
+  } catch (error) {
+    showToast("この写真は読み込めませんでした。ほかの写真を選んでください");
+  }
+});
+
+removePhotoButton.addEventListener("click", function () {
+  draftPhoto = null;
+  renderRecordPhoto();
+});
+
+// 記録のダイアログを閉じる（詳細から開いたときは、詳細に戻る）
+function closeRecord() {
+  recordDialog.close();
+  if (recordFromDetail) openDetail(dreamToRecord);
+}
+
+// 「あとで」
+document.getElementById("cancel-record").addEventListener("click", closeRecord);
+// Esc キーで閉じたときも、詳細に戻す
+recordDialog.addEventListener("cancel", function (event) {
+  event.preventDefault();
+  closeRecord();
+});
+
+// 「保存する」
+recordForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  if (!savePhoto(dreamToRecord.id, draftPhoto)) return; // 保存する場所がいっぱいなら、閉じずに止める
+  const note = recordNote.value.trim();
+  if (note === "") {
+    delete dreamToRecord.achievedNote;
+  } else {
+    dreamToRecord.achievedNote = note;
+  }
+  saveDreams();
+  render();
+  closeRecord();
+  showToast("達成の記録を保存しました");
+});
 // 「編集する」：詳細の画面を閉じて、編集の画面を開く
 openEditButton.addEventListener("click", function () {
   detailDialog.close();
@@ -1458,6 +1728,7 @@ deleteDreamButton.addEventListener("click", function () {
     return;
   }
   dreams = dreams.filter(function (d) { return d.id !== dreamToEdit.id; }); // 消すもの以外を残す
+  savePhoto(dreamToEdit.id, null); // 達成の写真があれば、それも消す
   saveDreams();
   render();
   editDialog.close();
@@ -1717,6 +1988,99 @@ categoryForm.addEventListener("submit", function (event) {
 });
 
 
+
+// ===== 家族を登録するダイアログ =====
+const familyDialog = document.getElementById("family-dialog");
+const familyForm = document.getElementById("family-form");
+const familyRows = document.getElementById("family-rows");
+const addFamilyButton = document.getElementById("add-family");
+const familyMessage = document.getElementById("family-message");
+
+// 編集中の家族（保存するまでは、ここだけを書きかえる）
+let draftFamily = [];
+
+// メニューの「家族を登録」：今の家族を写して、ダイアログを開く
+document.getElementById("menu-family").addEventListener("click", function () {
+  menuDialog.close();
+  draftFamily = family.map(function (p) { return { id: p.id, name: p.name, birthdate: p.birthdate }; });
+  if (draftFamily.length === 0) draftFamily.push(newFamilyRow()); // だれもいなければ、1行目を出しておく
+  familyMessage.hidden = true;
+  renderFamilyRows();
+  familyDialog.showModal();
+});
+
+// 新しい1行
+function newFamilyRow() {
+  return { id: "f" + Date.now() + Math.floor(Math.random() * 1000), name: "", birthdate: "" };
+}
+
+// 家族の行を描く関数
+function renderFamilyRows() {
+  familyRows.textContent = "";
+  draftFamily.forEach(function (person, index) {
+    const row = document.createElement("li");
+    row.className = "family-row";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.maxLength = 10;
+    nameInput.placeholder = "呼び名（例: 母）";
+    nameInput.value = person.name;
+    nameInput.setAttribute("aria-label", "呼び名");
+    nameInput.addEventListener("input", function () { person.name = nameInput.value; });
+
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.value = person.birthdate;
+    dateInput.setAttribute("aria-label", "生年月日");
+    dateInput.addEventListener("input", function () { person.birthdate = dateInput.value; });
+
+    const deleteButton = makeIconButton("×", "削除", function () {
+      draftFamily.splice(index, 1); // splice = 配列から index 番目を1つ取りのぞく
+      renderFamilyRows();
+    });
+
+    row.append(nameInput, dateInput, deleteButton);
+    familyRows.appendChild(row);
+  });
+
+  // 上限まで来たら「＋ 家族を追加」を押せなくする
+  const isFull = draftFamily.length >= MAX_FAMILY;
+  addFamilyButton.disabled = isFull;
+  addFamilyButton.textContent = isFull ? "家族は " + MAX_FAMILY + "人 まで登録できます" : "＋ 家族を追加";
+}
+
+addFamilyButton.addEventListener("click", function () {
+  if (draftFamily.length >= MAX_FAMILY) return;
+  draftFamily.push(newFamilyRow());
+  renderFamilyRows();
+  const inputs = familyRows.querySelectorAll('input[type="text"]');
+  inputs[inputs.length - 1].focus(); // 足した行の名前の欄にカーソルを置く
+});
+
+document.getElementById("cancel-family").addEventListener("click", function () {
+  familyDialog.close();
+});
+
+// 「保存する」
+familyForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  // 名前も生年月日も空の行は、無かったことにする
+  const rows = draftFamily
+    .map(function (p) { return { id: p.id, name: p.name.trim(), birthdate: p.birthdate }; })
+    .filter(function (p) { return p.name !== "" || p.birthdate !== ""; });
+  // 片方だけ入っている行があれば、知らせて止める
+  if (rows.some(function (p) { return p.name === "" || p.birthdate === ""; })) {
+    familyMessage.textContent = "呼び名と生年月日の両方を入れてください";
+    familyMessage.hidden = false;
+    return;
+  }
+  family = rows;
+  saveFamily();
+  render();
+  familyDialog.close();
+  showToast(family.length > 0 ? "家族を保存しました（" + family.length + "人）" : "家族の登録を消しました");
+});
 // ===== 確認のダイアログ（取り消せないことの前に出す） =====
 const confirmDialog = document.getElementById("confirm-dialog");
 const confirmTitle = document.getElementById("confirm-title");
@@ -1773,6 +2137,8 @@ exportBackupButton.addEventListener("click", function () {
     version: 1,               // ファイルの形の版（あとで形を変えたときに見分けるため）
     savedAt: todayString(),   // 保存した日
     profile: { birthdate: profile.birthdate || null },
+    family: family,           // 家族（呼び名と生年月日）
+    photos: allPhotos(),      // 達成の写真 { やりたいことの id: 写真 }
     dreams: dreams,
     categories: categories,
   };
@@ -1873,6 +2239,13 @@ function restoreBackup(backup) {
   categories = backup.categories;
   // 生年月日は、バックアップに入っていればそれにする（無ければ今のまま）
   if (backup.profile && backup.profile.birthdate) profile.birthdate = backup.profile.birthdate;
+  // 達成の写真（写真の機能を作る前のバックアップには入っていないので、そのときは全部消す）
+  replaceAllPhotos(backup.photos && typeof backup.photos === "object" ? backup.photos : {});
+  // 家族も、バックアップに入っていれば戻す（家族の機能を作る前のバックアップには入っていない）
+  if (Array.isArray(backup.family)) {
+    family = backup.family;
+    saveFamily();
+  }
   saveDreams();
   saveCategories();
   saveProfile();
@@ -1936,4 +2309,10 @@ render();
 // （パソコンでファイルを直接開いているとき＝file:// では使えないので、http/https のときだけ）
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js");
+}
+
+// ===== 同期で写真を受け取ったあと、画面を描き直す（sync.js から呼ばれる） =====
+function refreshView() {
+  render();
+  if (detailDialog.open && dreamInDetail) renderDetail();
 }

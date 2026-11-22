@@ -194,9 +194,17 @@
       <span id="detail-category" class="category-chip"></span>
       <h2 id="detail-title"></h2>
       <p id="detail-deadline" class="detail-deadline"></p>
+      <!-- 家族を登録しているとき：期限（叶えた日）の家族の年齢 -->
+      <p id="detail-family" class="detail-family" hidden></p>
       <p id="detail-memo" class="detail-memo"></p>
       <!-- 叶えたときだけ出る「🎉 2026年11月22日に叶えた（22歳）」 -->
       <p id="detail-achieved" class="achieved-banner" hidden></p>
+      <!-- 達成の記録（ひとこと感想と写真）。叶えたときだけ出る -->
+      <div id="detail-record" class="record-box" hidden>
+        <img id="detail-record-photo" class="record-photo" alt="達成したときの写真" hidden>
+        <p id="detail-record-note" class="record-note" hidden></p>
+        <button type="button" id="open-record" class="link-button record-edit">✏️ 達成の記録を書く</button>
+      </div>
     </div>
 
     <!-- 「叶えた！」ボタン（叶えたあとは「叶えたを取り消す」に変わる） -->
@@ -282,6 +290,8 @@
     <button type="button" id="menu-categories" class="menu-item">分野を編集</button>
     <!-- 生年月日を入れ直すボタン -->
     <button type="button" id="change-birthdate" class="menu-item">生年月日を変更</button>
+    <!-- 家族を登録すると、ロードマップの各年に家族の年齢も出る -->
+    <button type="button" id="menu-family" class="menu-item">家族を登録</button>
 
     <h3 class="drawer-section">PC と iPhone の同期</h3>
     <!-- ログインしていないとき -->
@@ -317,6 +327,51 @@
       <div class="dialog-buttons">
         <button type="button" id="cancel-category" class="cancel-button">キャンセル</button>
         <button type="submit" id="save-category">保存する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== 達成の記録のダイアログ（叶えたときの、ひとこと感想と写真） ===== -->
+  <dialog id="record-dialog">
+    <form id="record-form">
+      <h2>🎉 達成の記録</h2>
+      <p id="record-dream" class="record-dream"></p>
+      <p>
+        <label>ひとこと感想<br>
+          <textarea id="record-note" rows="3" maxlength="300" placeholder="例: ゴールの瞬間、泣きそうになった！"></textarea>
+        </label>
+      </p>
+      <div class="field">
+        <p class="field-label">写真</p>
+        <!-- 選んだ写真（script.js が小さくしてから出す） -->
+        <img id="record-photo-preview" class="record-photo" alt="選んだ写真" hidden>
+        <div class="record-photo-buttons">
+          <button type="button" id="choose-photo" class="sub-button">📷 写真を選ぶ</button>
+          <button type="button" id="remove-photo" class="link-button" hidden>写真を外す</button>
+        </div>
+        <!-- 写真を選ぶ部品（見えなくしておき、上のボタンから開く） -->
+        <input type="file" id="photo-file" accept="image/*" class="visually-hidden">
+      </div>
+      <div class="dialog-buttons">
+        <button type="button" id="cancel-record" class="cancel-button">あとで</button>
+        <button type="submit">保存する</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== 家族を登録するダイアログ ===== -->
+  <dialog id="family-dialog">
+    <form id="family-form">
+      <h2>家族を登録</h2>
+      <p class="note">登録すると、ロードマップの各年や期限に、家族の年齢も出ます。「子どもが小学生のうちに」のように考えられます。<br>家族の生年月日も、この機械の中だけに保存されます（バックアップには入ります）。</p>
+      <!-- 家族の1行ずつ（script.js が作る） -->
+      <ul id="family-rows" class="family-rows"></ul>
+      <button type="button" id="add-family" class="sub-button">＋ 家族を追加</button>
+      <!-- 名前や生年月日が空のときのお知らせ -->
+      <p id="family-message" class="category-message warning" hidden></p>
+      <div class="dialog-buttons">
+        <button type="button" id="cancel-family" class="cancel-button">キャンセル</button>
+        <button type="submit">保存する</button>
       </div>
     </form>
   </dialog>

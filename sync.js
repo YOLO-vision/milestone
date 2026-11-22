@@ -74,6 +74,33 @@ function startSync() {
     return db.collection("users").doc(uid).collection("apps").doc("roadmap");
   }
 
+  // 達成の写真の置き場所（1枚ずつ。やりたいことのデータと分けるのは、Firebase の1つの置き場所に入る大きさ（1MB）に限りがあるため）
+  function photosCollection() {
+    return roadmapDoc().collection("photos");
+  }
+
+  // 写真1枚を送る（この機械に無ければ、Firebase からも消す）
+  function uploadPhoto(dreamId) {
+    const data = loadPhoto(dreamId);
+    if (data) return photosCollection().doc(dreamId).set({ data: data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return photosCollection().doc(dreamId).delete();
+  }
+
+  // この機械の写真を、全部送る（はじめてログインした機械＝引っ越しのとき）
+  async function uploadAllPhotos() {
+    const photos = allPhotos();
+    await Promise.all(Object.keys(photos).map(uploadPhoto)); // Promise.all = 全部送り終わるまで待つ
+  }
+
+  // Firebase の写真を全部受け取って、この機械の写真を入れかえる（2台目の機械など）
+  async function downloadAllPhotos() {
+    const snapshot = await photosCollection().get();
+    const photos = {};
+    snapshot.forEach(function (doc) { photos[doc.id] = doc.data().data; });
+    replaceAllPhotos(photos, true); // true = 受け取ったものなので、送り返さない
+    refreshView();
+  }
+
   // 今のデータを Firebase に送る
   function upload() {
     return roadmapDoc().set({
@@ -100,7 +127,7 @@ function startSync() {
     applyRemoteData({ dreams: data.dreams, categories: data.categories });
   }
 
-  // ほかの機械からの知らせを受け取り始める
+  // ほかの機械からの知らせを受け取り始める（やりたいこと・分野と、写真の2つ）
   function startListening() {
     // onSnapshot = Firebase のデータが変わるたびに、中の関数を呼んでくれる
     stopListening = roadmapDoc().onSnapshot(function (doc) {
@@ -108,6 +135,18 @@ function startSync() {
       if (doc.metadata.hasPendingWrites) return;
       if (doc.exists) applyDoc(doc);
     }, showSyncError);
+    const stopPhotos = photosCollection().onSnapshot(function (snapshot) {
+      // docChanges = 前から変わった写真だけ（足された・変わった・消された）
+      // 自分が送ったばかりの写真（hasPendingWrites）は、もう入っているので飛ばす
+      snapshot.docChanges().forEach(function (change) {
+        if (change.doc.metadata.hasPendingWrites) return;
+        savePhoto(change.doc.id, change.type === "removed" ? null : change.doc.data().data, true);
+      });
+      if (snapshot.docChanges().length > 0) refreshView();
+    }, showSyncError);
+    // 受け取りをやめるときは、2つともやめる
+    const stopDreams = stopListening;
+    stopListening = function () { stopDreams(); stopPhotos(); };
   }
 
   // この機械のデータとつなげて、同期を始める
@@ -136,11 +175,13 @@ function startSync() {
       if (!doc.exists) {
         // Firebase がまだ空（はじめてログインした機械）→ この機械のデータを送る（引っ越し）
         await upload();
+        await uploadAllPhotos();
         finishLinking();
         showToast("この機械のデータを Firebase に保存しました。これからは自動でそろいます");
       } else if (localStorage.getItem(SYNC_UID_KEY) === uid || !hasLocalData()) {
         // 前にもこの人でつながっていた、またはこの機械にデータがない → Firebase のデータを使う
         applyDoc(doc);
+        await downloadAllPhotos();
         finishLinking();
       } else {
         // この機械にもデータがある（2台目の機械）→ 置きかえてよいか確かめる
@@ -151,8 +192,9 @@ function startSync() {
           "この機械のデータを、Firebase に保存されているデータ（マイルストーン " + count + "件）で置きかえます。" +
             "この機械にしかないデータは消えます。残したいときは「キャンセル」を押して、先にバックアップを保存してください。",
           "置きかえる",
-          function () {
+          async function () {
             applyDoc(doc);
+            await downloadAllPhotos().catch(showSyncError);
             finishLinking();
             showToast("Firebase のデータに置きかえました。これからは自動でそろいます");
           },
@@ -170,6 +212,10 @@ function startSync() {
   // ===== script.js からの「保存したよ」の合図を聞いて、Firebase に送る =====
   document.addEventListener("roadmap-saved", function () {
     if (ready) scheduleUpload();
+  });
+  // 写真を保存した・外したときは、その1枚だけ送る
+  document.addEventListener("roadmap-photo-saved", function (event) {
+    if (ready) uploadPhoto(event.detail.dreamId).catch(showSyncError);
   });
 
   // ===== メニューの表示 =====
