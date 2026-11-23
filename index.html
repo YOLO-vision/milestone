@@ -140,15 +140,33 @@
   <!-- hidden = 生年月日を入れるまでは隠しておく -->
   <button type="button" id="add-button" class="fab" aria-label="マイルストーンを追加" hidden>＋</button>
 
+  <!-- ===== 年代別アイデア集（追加の画面・はじめの案内から開く） ===== -->
+  <dialog id="idea-dialog">
+    <h2>💡 アイデアから選ぶ</h2>
+    <p class="idea-lead">気になるものを押すと、名前・分野・期限が入ります。あとで自由に直せます</p>
+    <!-- 年代のボタン（script.js が作る） -->
+    <div id="idea-tabs" class="filter-bar idea-tabs"></div>
+    <!-- 「30歳の誕生日まで（2034年8月14日・あと7年9か月）」 -->
+    <p id="idea-deadline" class="idea-deadline"></p>
+    <!-- アイデアの一覧（script.js が作る） -->
+    <ul id="idea-list" class="idea-list"></ul>
+    <div class="dialog-buttons">
+      <button type="button" id="close-ideas" class="cancel-button">閉じる</button>
+    </div>
+  </dialog>
+
   <!-- ===== やりたいことを追加するダイアログ（＋ボタンで出る） ===== -->
   <dialog id="add-dialog">
     <form id="dream-form">
       <h2>マイルストーンを追加</h2>
-      <p>
-        <label>マイルストーン<br>
-          <input type="text" id="dream-title" required maxlength="60" placeholder="例: 海外に1か月住む">
-        </label>
-      </p>
+      <div class="field">
+        <!-- 「マイルストーン」の文字と「アイデアから選ぶ」ボタンを横に並べる -->
+        <div class="label-row">
+          <label for="dream-title" class="field-label">マイルストーン</label>
+          <button type="button" id="open-ideas" class="link-button idea-link">💡 アイデアから選ぶ</button>
+        </div>
+        <input type="text" id="dream-title" required maxlength="60" placeholder="例: 海外に1か月住む">
+      </div>
       <div class="field">
         <!-- 「分野」の文字と「分野を編集」ボタンを横に並べる -->
         <div class="label-row">

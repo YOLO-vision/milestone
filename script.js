@@ -890,7 +890,14 @@ function makeWelcome() {
     addDialog.showModal();
   });
 
-  box.append(icon, title, text, examples, button);
+  // 年代別アイデア集を開くボタン
+  const ideas = document.createElement("button");
+  ideas.type = "button";
+  ideas.className = "link-button welcome-ideas";
+  ideas.textContent = "💡 年代別のアイデアから選ぶ";
+  ideas.addEventListener("click", openIdeas);
+
+  box.append(icon, title, text, examples, button, ideas);
   return box;
 }
 // ===== 叶えたこと =====
@@ -1493,6 +1500,183 @@ function highlightDream(id) {
   void item.offsetWidth; // 動きをもう一度最初から始めるための、おまじない
   item.classList.add("flash");
 }
+
+// ===== 年代別アイデア集 =====
+// 年代ごとのマイルストーンの例。押すと、名前・分野・期限が入った状態で追加の画面になる
+// decade = 20 なら「20代のうちに」（期限は30歳の誕生日）、"someday" は期限なし（いつか）
+const IDEAS = [
+  { decade: 20, emoji: "✈️", title: "海外ひとり旅をする", category: "旅行" },
+  { decade: 20, emoji: "💰", title: "貯金100万円をためる", category: "お金" },
+  { decade: 20, emoji: "📜", title: "資格を1つ取る", category: "学び" },
+  { decade: 20, emoji: "🏃", title: "フルマラソンを走る", category: "スポーツ" },
+  { decade: 20, emoji: "🌏", title: "海外に1か月住む", category: "旅行" },
+  { decade: 20, emoji: "🗣️", title: "英語で日常会話ができるようになる", category: "学び" },
+  { decade: 20, emoji: "💻", title: "自分のサービスを作って公開する", category: "仕事" },
+  { decade: 20, emoji: "📚", title: "本を100冊読む", category: "学び" },
+  { decade: 20, emoji: "🎁", title: "親を旅行に連れて行く", category: "家族・人間関係" },
+
+  { decade: 30, emoji: "🏠", title: "マイホームを買う", category: "お金" },
+  { decade: 30, emoji: "💰", title: "貯金1000万円をためる", category: "お金" },
+  { decade: 30, emoji: "📈", title: "年収1000万円になる", category: "仕事" },
+  { decade: 30, emoji: "🏢", title: "独立・起業する", category: "仕事" },
+  { decade: 30, emoji: "👨‍👩‍👧", title: "家族で海外旅行に行く", category: "家族・人間関係" },
+  { decade: 30, emoji: "🗻", title: "富士山に登る", category: "スポーツ" },
+  { decade: 30, emoji: "💪", title: "体脂肪率15%以下の体をつくる", category: "健康" },
+  { decade: 30, emoji: "🎤", title: "自分の得意なことを人に教える", category: "仕事" },
+
+  { decade: 40, emoji: "🌍", title: "世界一周旅行をする", category: "旅行" },
+  { decade: 40, emoji: "💹", title: "配当や家賃で毎月の収入をつくる", category: "お金" },
+  { decade: 40, emoji: "🏃", title: "ハーフマラソンを走り切る", category: "スポーツ" },
+  { decade: 40, emoji: "🩺", title: "毎年の人間ドックを習慣にする", category: "健康" },
+  { decade: 40, emoji: "🎸", title: "楽器で1曲弾けるようになる", category: "趣味" },
+  { decade: 40, emoji: "✍️", title: "自分の経験を本やブログにまとめる", category: "趣味" },
+  { decade: 40, emoji: "🤝", title: "後輩や部下を一人前に育てる", category: "仕事" },
+  { decade: 40, emoji: "🏡", title: "二拠点生活を始める", category: "その他" },
+
+  { decade: 50, emoji: "💰", title: "老後のお金のめどを立てる", category: "お金" },
+  { decade: 50, emoji: "🗾", title: "47都道府県を全部まわる", category: "旅行" },
+  { decade: 50, emoji: "🧳", title: "パートナーと長い旅行に行く", category: "家族・人間関係" },
+  { decade: 50, emoji: "🎓", title: "大学や講座で学び直す", category: "学び" },
+  { decade: 50, emoji: "🌱", title: "家庭菜園を始める", category: "趣味" },
+  { decade: 50, emoji: "🚶", title: "毎日の運動を習慣にする", category: "健康" },
+  { decade: 50, emoji: "🎨", title: "新しい趣味を1つ始める", category: "趣味" },
+
+  { decade: 60, emoji: "🚢", title: "クルーズ旅行に行く", category: "旅行" },
+  { decade: 60, emoji: "👴", title: "孫と旅行に行く", category: "家族・人間関係" },
+  { decade: 60, emoji: "📖", title: "自分史を書く", category: "趣味" },
+  { decade: 60, emoji: "⛳", title: "ゴルフで100を切る", category: "スポーツ" },
+  { decade: 60, emoji: "🤲", title: "地域の活動やボランティアをする", category: "その他" },
+  { decade: 60, emoji: "🏘️", title: "住みたい町に引っ越す", category: "その他" },
+
+  { decade: "someday", emoji: "🌌", title: "オーロラを見る", category: "旅行" },
+  { decade: "someday", emoji: "🧂", title: "ウユニ塩湖に行く", category: "旅行" },
+  { decade: "someday", emoji: "🏆", title: "大会で優勝する", category: "スポーツ" },
+  { decade: "someday", emoji: "🎙️", title: "大勢の前で講演する", category: "仕事" },
+  { decade: "someday", emoji: "🪂", title: "スカイダイビングをする", category: "趣味" },
+  { decade: "someday", emoji: "⛺", title: "キャンプで1週間すごす", category: "趣味" },
+  { decade: "someday", emoji: "🐬", title: "イルカと泳ぐ", category: "旅行" },
+  { decade: "someday", emoji: "🎬", title: "好きな映画のロケ地に行く", category: "旅行" },
+];
+
+const ideaDialog = document.getElementById("idea-dialog");
+const ideaTabs = document.getElementById("idea-tabs");
+const ideaDeadlineText = document.getElementById("idea-deadline");
+const ideaList = document.getElementById("idea-list");
+let ideaDecade = null; // 選んでいる年代（20・30…か "someday"）
+
+// 今の年齢から先の年代だけ（22歳なら 20代・30代…）。いつかは、いつでも出す
+function ideaDecades() {
+  const age = ageOn(parseDate(profile.birthdate), todayDate());
+  const decades = [20, 30, 40, 50, 60].filter(function (d) { return age < d + 10; });
+  decades.push("someday");
+  return decades;
+}
+
+// 年代の期限：「20代のうちに」なら30歳の誕生日（2月29日生まれで、その年に29日が無ければ28日）
+function ideaDeadline(decade) {
+  if (decade === "someday") return null;
+  const birth = parseDate(profile.birthdate);
+  const year = birth.getFullYear() + decade + 10;
+  const month = birth.getMonth() + 1;
+  return { year: year, month: month, day: Math.min(birth.getDate(), daysInMonth(year, month)) };
+}
+
+function ideaTabLabel(decade) {
+  if (decade === "someday") return "いつか";
+  return decade === 60 ? "60代〜" : decade + "代";
+}
+
+// アイデアの分野：自分の分野の一覧にあればそれ、無ければ（名前を変えた・消したなど）今選んでいる分野
+function ideaCategory(idea) {
+  const exists = categories.some(function (c) { return c.name === idea.category; });
+  return exists ? idea.category : categoryInput.value;
+}
+
+function openIdeas() {
+  const decades = ideaDecades();
+  if (!decades.includes(ideaDecade)) ideaDecade = decades[0]; // はじめは今の年代
+  renderIdeas();
+  ideaDialog.showModal();
+}
+
+function renderIdeas() {
+  // 年代のボタン
+  ideaTabs.textContent = "";
+  for (const decade of ideaDecades()) {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "filter-chip";
+    if (decade === ideaDecade) tab.classList.add("selected");
+    tab.textContent = ideaTabLabel(decade);
+    tab.addEventListener("click", function () {
+      ideaDecade = decade;
+      renderIdeas();
+      ideaList.scrollTop = 0;
+    });
+    ideaTabs.appendChild(tab);
+  }
+
+  // 期限の説明
+  const deadline = ideaDeadline(ideaDecade);
+  if (deadline === null) {
+    ideaDeadlineText.textContent = "期限なし（「いつか」に入ります）";
+  } else {
+    const end = deadlineEnd(deadline);
+    ideaDeadlineText.textContent = (ideaDecade === 60 ? "70" : ideaDecade + 10) + "歳の誕生日まで（" +
+      deadlineLabel(deadline, true).replace("まで", "") + "・" + remainingText(end) + "）";
+  }
+
+  // アイデアの一覧（もう同じ名前のマイルストーンがあれば「追加済み」）
+  const titles = dreams.map(function (d) { return d.title; });
+  ideaList.textContent = "";
+  for (const idea of IDEAS.filter(function (i) { return i.decade === ideaDecade; })) {
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "idea-item";
+    const emoji = document.createElement("span");
+    emoji.className = "idea-emoji";
+    emoji.textContent = idea.emoji;
+    const title = document.createElement("span");
+    title.className = "idea-title";
+    title.textContent = idea.title;
+    button.append(emoji, title);
+
+    if (titles.includes(idea.title)) {
+      button.disabled = true;
+      button.classList.add("added");
+      const done = document.createElement("span");
+      done.className = "idea-added";
+      done.textContent = "追加済み";
+      button.appendChild(done);
+    } else {
+      const category = ideaCategory(idea);
+      const chip = document.createElement("span");
+      chip.className = "category-chip";
+      chip.style.backgroundColor = colorOf(category);
+      chip.textContent = category;
+      button.appendChild(chip);
+      button.addEventListener("click", function () { chooseIdea(idea); });
+    }
+    li.appendChild(button);
+    ideaList.appendChild(li);
+  }
+}
+
+// アイデアを選んだら、追加の画面に入れる（メモは書きかけのまま残す）
+function chooseIdea(idea) {
+  titleInput.value = idea.title;
+  categoryInput.value = ideaCategory(idea);
+  refreshCategoryPickers();
+  newDeadline.write(ideaDeadline(ideaDecade));
+  ideaDialog.close();
+  if (!addDialog.open) addDialog.showModal();
+}
+
+document.getElementById("open-ideas").addEventListener("click", openIdeas);
+document.getElementById("close-ideas").addEventListener("click", function () {
+  ideaDialog.close();
+});
 
 // ===== 詳細ダイアログ（小さなステップ） =====
 const detailDialog = document.getElementById("detail-dialog");

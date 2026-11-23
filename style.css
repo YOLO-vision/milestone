@@ -2173,3 +2173,97 @@ dialog {
     height: 22px;
   }
 }
+
+/* ===== 年代別アイデア集 ===== */
+.welcome-ideas {
+  margin-top: 8px;
+  color: var(--main-dark);
+}
+
+#idea-dialog {
+  display: none;
+  max-height: 85vh;
+  flex-direction: column;       /* 上（年代のボタン）は止めて、アイデアの一覧だけスクロール */
+}
+
+#idea-dialog[open] {
+  display: flex;
+}
+
+#idea-dialog h2 {
+  margin: 0 0 4px;
+}
+
+.idea-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.idea-tabs {
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+.idea-deadline {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--main-dark);
+}
+
+.idea-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+/* アイデア1つ（押すと追加の画面に入る） */
+.idea-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-weight: normal;
+  text-align: left;
+  color: var(--text);
+  background-color: var(--surface);
+}
+
+.idea-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.idea-emoji {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.idea-title {
+  flex: 1;
+}
+
+/* もう追加してあるもの：うすく */
+.idea-item.added {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.idea-item.added:active {
+  transform: none;
+}
+
+.idea-added {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 開いたときに、年代のボタンの帯に黒いわくが出ないように */
+.idea-tabs:focus {
+  outline: none;
+}
