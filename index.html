@@ -116,17 +116,17 @@
 
       <!-- 見え方の切り替え -->
       <div class="view-switch">
-        <button type="button" id="show-list" class="view-button">一覧</button>
         <button type="button" id="show-roadmap" class="view-button">ロードマップ</button>
+        <button type="button" id="show-calendar" class="view-button">カレンダー</button>
       </div>
 
       <!-- 分野で絞りこむボタン（script.js が作る）。横に入りきらないときは横にスクロールする -->
       <div id="filter-bar" class="filter-bar"></div>
 
-      <!-- 一覧の中身（script.js が作る） -->
-      <div id="dream-list"></div>
       <!-- ロードマップ（年表）の中身（script.js が作る） -->
       <div id="roadmap" class="roadmap" hidden></div>
+      <!-- 人生カレンダー（1行＝1年、1マス＝1か月。script.js が作る） -->
+      <div id="life-calendar" class="life-calendar" hidden></div>
 
       <!-- 叶えたこと。<details> は押すと開く・閉じるができる箱 -->
       <details id="achieved-box" class="achieved-box" hidden>

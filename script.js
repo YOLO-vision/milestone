@@ -15,7 +15,6 @@ const dreamForm = document.getElementById("dream-form");
 const titleInput = document.getElementById("dream-title");
 const categoryInput = document.getElementById("dream-category");
 const memoInput = document.getElementById("dream-memo");
-const dreamList = document.getElementById("dream-list");
 const dreamCount = document.getElementById("dream-count");
 
 const editDialog = document.getElementById("edit-dialog");
@@ -551,7 +550,7 @@ const newDeadline = setupDeadlineInputs("dream");   // 入力フォーム
 const editDeadline = setupDeadlineInputs("edit");   // 編集ダイアログ
 
 // ===== 6. 画面を描く =====
-const viewSwitch = document.querySelector(".view-switch"); // 「一覧｜ロードマップ」の切り替え
+const viewSwitch = document.querySelector(".view-switch"); // 「ロードマップ｜カレンダー」の切り替え
 function render() {
   // 生年月日がまだなら、「はじめに」だけ出す
   const hasBirthdate = Boolean(profile.birthdate);
@@ -569,8 +568,8 @@ function render() {
   viewSwitch.hidden = dreams.length === 0; // まだ1つも無いときは、切り替えのボタンもいらない
 
   renderFilter();                           // 分野で絞りこむボタン
-  renderList(birth, groupEntries(false));   // 一覧：やりたいことだけ
   renderRoadmap(birth, groupEntries(true)); // ロードマップ：期限のあるステップも並べる
+  renderCalendar(birth);                    // 人生カレンダー
   renderAchieved(birth);                    // 叶えたこと
   renderStats();                            // 達成の記録
   renderSide(birth);                        // PC の左の列
@@ -894,53 +893,6 @@ function makeWelcome() {
   box.append(icon, title, text, examples, button);
   return box;
 }
-// ===== 一覧 =====
-function renderList(birth, groups) {
-  dreamList.textContent = ""; // いったん空にする
-  if (dreams.length === 0) {
-    dreamList.appendChild(makeWelcome()); // まだ1つも無いときは、はじめての案内
-    return;
-  }
-  if (shownDreams().length === 0) {
-    dreamList.appendChild(makeEmpty(emptyMessage("まだありません。右下の「＋」から、思いつくまま追加してみましょう！")));
-    return;
-  }
-  if (groups.overdue.length > 0) {
-    addListGroup("期限をすぎたもの", "", true, groups.overdue.map(function (e) { return makeEntry(e, birth, true); }));
-  }
-  for (const group of groups.years) {
-    addListGroup(group.year + "年", selfAgesInYear(birth, group.year), false,
-      group.items.map(function (e) { return makeEntry(e, birth, false); }), familyAgesInYear(group.year));
-  }
-  if (groups.someday.length > 0) {
-    addListGroup("いつか", "期限を決めると、上に並びます", false,
-      groups.someday.map(function (e) { return makeEntry(e, birth, true); }));
-  }
-}
-
-// 一覧に、1つのまとまり（見出し＋やりたいこと）を足す関数
-// familyText = 家族の年齢（なくてもよい）。あれば見出しの下にもう1行出す
-function addListGroup(title, sub, isOverdue, items, familyText) {
-  const heading = document.createElement("div");
-  heading.className = "group-title";
-  if (isOverdue) heading.classList.add("overdue");
-  const titleText = document.createElement("span");
-  titleText.className = "group-age";
-  titleText.textContent = title;
-  const subText = document.createElement("span");
-  subText.className = "group-remaining";
-  subText.textContent = sub;
-  heading.append(titleText, subText);
-  if (familyText) {
-    const familyLine = document.createElement("span");
-    familyLine.className = "group-family";
-    familyLine.textContent = familyText;
-    heading.appendChild(familyLine);
-  }
-  dreamList.appendChild(heading);
-  for (const item of items) dreamList.appendChild(item);
-}
-
 // ===== 叶えたこと =====
 const achievedBox = document.getElementById("achieved-box");
 const achievedCount = document.getElementById("achieved-count");
@@ -1230,25 +1182,232 @@ function makeYearPoint(birth, group) {
   return point;
 }
 
-// ===== 一覧とロードマップの切り替え =====
-const showListButton = document.getElementById("show-list");
+// ===== 人生カレンダー =====
+// 1行 = 1年（誕生日の月から、次の誕生日の前の月まで）、1マス = 1か月
+// すぎた月は塗りつぶし、今月は光らせ、マイルストーンの期限の月は分野の色、叶えた月は金色の★
+const lifeCalendar = document.getElementById("life-calendar");
+const LIFE_YEARS = 90;      // 何歳まで並べるか（それより後の期限があれば、そこまで伸ばす）
+let openCalendarKey = null; // 押して中身を開いているマス（月の番号）。開いていなければ null
+
+// 月の番号（年 × 12 + 月）。番号どうしを引き算すると、何か月はなれているかがわかる
+function monthKey(date) {
+  return date.getFullYear() * 12 + date.getMonth();
+}
+
+// 月の番号から、その月の1日の日付にもどす
+function keyToDate(key) {
+  return new Date(Math.floor(key / 12), key % 12, 1);
+}
+
+// マスに付ける印を集める関数。月の番号 → [{ dream, achieved }]
+// まだのものは期限の最後の日の月、叶えたものは叶えた日の月に置く（絞りこみにも合わせる）
+function calendarMarks() {
+  const marks = new Map(); // Map = 「番号 → 中身」の対応表
+  function add(key, item) {
+    if (!marks.has(key)) marks.set(key, []);
+    marks.get(key).push(item);
+  }
+  for (const dream of dreams) {
+    if (!matchesFilter(dream)) continue;
+    if (dream.achievedAt) {
+      add(monthKey(parseDate(dream.achievedAt)), { dream: dream, achieved: true });
+    } else if (dream.deadline !== null) {
+      add(monthKey(deadlineEnd(dream.deadline)), { dream: dream, achieved: false });
+    }
+  }
+  return marks;
+}
+
+function renderCalendar(birth) {
+  lifeCalendar.textContent = "";
+  if (dreams.length === 0) {
+    lifeCalendar.appendChild(makeWelcome()); // まだ1つも無いときは、はじめての案内
+    return;
+  }
+
+  const birthKey = monthKey(birth);
+  const nowKey = monthKey(todayDate());
+  const marks = calendarMarks();
+
+  // 何年分並べるか：ふつうは90歳まで。もっと後の印があれば、その年まで
+  let years = LIFE_YEARS;
+  for (const key of marks.keys()) years = Math.max(years, Math.floor((key - birthKey) / 12) + 1);
+  const total = years * 12;
+  const lived = Math.max(0, Math.min(total, nowKey - birthKey)); // すぎた月の数
+
+  // --- 上のまとめ：「これから ○か月」 ---
+  const summary = document.createElement("div");
+  summary.className = "cal-summary";
+  const big = document.createElement("p");
+  big.className = "cal-summary-main";
+  big.innerHTML = "これから <strong>" + (total - lived).toLocaleString() + "</strong> か月";
+  const sub = document.createElement("p");
+  sub.className = "cal-summary-sub";
+  sub.textContent = years + "歳まで " + total.toLocaleString() + "か月のうち、" + lived.toLocaleString() + "か月がすぎました";
+  const bar = document.createElement("div");
+  bar.className = "progress";
+  const fill = document.createElement("div");
+  fill.className = "progress-bar";
+  fill.style.width = (lived / total * 100) + "%";
+  bar.appendChild(fill);
+  summary.append(big, sub, bar);
+
+  // --- 色の見方 ---
+  const legend = document.createElement("div");
+  legend.className = "cal-legend";
+  for (const [className, label] of [["past", "すぎた月"], ["now", "今月"], ["mark", "期限"], ["achieved", "叶えた"]]) {
+    const item = document.createElement("span");
+    const sample = document.createElement("span");
+    sample.className = "cal-cell " + className;
+    if (className === "achieved") sample.textContent = "★";
+    if (className === "mark") sample.style.backgroundColor = colorOf(categories[0].name); // 見本は1つ目の分野の色
+    item.append(sample, label);
+    legend.appendChild(item);
+  }
+  const note = document.createElement("p");
+  note.className = "cal-note";
+  note.textContent = "1行＝1年（誕生日の月から）、1マス＝1か月。マスを押すと、その月のことが見られます";
+
+  // --- マスを並べる ---
+  const grid = document.createElement("div");
+  grid.className = "cal-grid";
+  for (let age = 0; age < years; age++) {
+    const row = document.createElement("div");
+    row.className = "cal-row";
+    if (age > 0 && age % 10 === 0) row.classList.add("decade"); // 10歳ごとに少しすき間をあける
+    const label = document.createElement("span");
+    label.className = "cal-age";
+    label.textContent = age % 5 === 0 ? age + "歳" : age;
+    row.appendChild(label);
+
+    let openHere = false; // この行のマスを開いているか
+    for (let i = 0; i < 12; i++) {
+      const key = birthKey + age * 12 + i;
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "cal-cell";
+      cell.dataset.key = key;
+      if (key < nowKey) cell.classList.add("past");
+      if (key === nowKey) {
+        cell.classList.add("now");
+        row.classList.add("current");
+        label.textContent = age + "歳";
+      }
+      const items = marks.get(key);
+      if (items) {
+        // 叶えたものがあれば金色の★、なければ最初のマイルストーンの分野の色
+        const achieved = items.some(function (m) { return m.achieved; });
+        if (achieved) {
+          cell.classList.add("achieved");
+          cell.textContent = "★";
+        } else {
+          cell.classList.add("mark");
+          cell.style.backgroundColor = colorOf(items[0].dream.category);
+          if (key < nowKey) cell.classList.add("overdue"); // 期限をすぎたもの
+        }
+        if (items.length > 1) cell.classList.add("many"); // 2つ以上あるときは、小さな点
+      }
+      const date = keyToDate(key);
+      cell.setAttribute("aria-label", date.getFullYear() + "年" + (date.getMonth() + 1) + "月" + (items ? "、マイルストーン" + items.length + "件" : ""));
+      if (key === openCalendarKey) {
+        cell.classList.add("selected");
+        openHere = true;
+      }
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+    if (openHere) grid.appendChild(makeCalendarInfo(birth, openCalendarKey, age, marks.get(openCalendarKey) || []));
+  }
+
+  lifeCalendar.append(summary, legend, note, grid);
+}
+
+// マスを押したときに、その行の下に出す「その月のこと」
+function makeCalendarInfo(birth, key, age, items) {
+  const box = document.createElement("div");
+  box.className = "cal-info";
+  const date = keyToDate(key);
+  const nowKey = monthKey(todayDate());
+
+  const title = document.createElement("p");
+  title.className = "cal-info-title";
+  title.textContent = date.getFullYear() + "年" + (date.getMonth() + 1) + "月・" + age + "歳";
+  const sub = document.createElement("p");
+  sub.className = "cal-info-sub";
+  if (key === nowKey) sub.textContent = "今月";
+  else if (key < nowKey) sub.textContent = "すぎた月";
+  else {
+    // 今月から何か月先か（「3年4か月後」）
+    const months = key - nowKey;
+    const years = Math.floor(months / 12);
+    sub.textContent = (years > 0 ? years + "年" : "") + (months % 12 > 0 ? (months % 12) + "か月" : "") + "後";
+  }
+  box.append(title, sub);
+
+  const familyText = familyAgesOn(date);
+  if (familyText) {
+    const familyLine = document.createElement("p");
+    familyLine.className = "cal-info-family";
+    familyLine.textContent = familyText;
+    box.appendChild(familyLine);
+  }
+
+  for (const item of items) box.appendChild(makeDreamItem(item.dream, birth, true));
+
+  // まだ来ていない月なら、「この月を期限に追加」
+  if (key >= nowKey) {
+    if (items.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "cal-info-empty";
+      empty.textContent = "この月のマイルストーンはありません";
+      box.appendChild(empty);
+    }
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "sub-button cal-info-add";
+    add.textContent = "＋ この月を期限にして追加";
+    add.addEventListener("click", function () {
+      newDeadline.write({ year: date.getFullYear(), month: date.getMonth() + 1, day: null });
+      addDialog.showModal();
+    });
+    box.appendChild(add);
+  }
+  return box;
+}
+
+// マスを押したら、その月のことを開く（同じマスをもう一度押したら閉じる）
+lifeCalendar.addEventListener("click", function (event) {
+  const cell = event.target.closest(".cal-grid .cal-cell"); // closest = 押したところから外側へ、合うものを探す
+  if (!cell) return;
+  const key = Number(cell.dataset.key);
+  openCalendarKey = openCalendarKey === key ? null : key;
+  renderCalendar(parseDate(profile.birthdate));
+});
+
+// ===== ロードマップとカレンダーの切り替え =====
 const showRoadmapButton = document.getElementById("show-roadmap");
+const showCalendarButton = document.getElementById("show-calendar");
 const VIEW_KEY = "roadmap-view"; // 最後に選んだ見え方を覚えておく場所の名前
 
-// 見え方を切り替える関数（view は "list" か "roadmap"）
+// 見え方を切り替える関数（view は "roadmap" か "calendar"）
 function setView(view) {
-  dreamList.hidden = view !== "list";
   roadmap.hidden = view !== "roadmap";
-  showListButton.classList.toggle("active", view === "list");
+  lifeCalendar.hidden = view !== "calendar";
   showRoadmapButton.classList.toggle("active", view === "roadmap");
+  showCalendarButton.classList.toggle("active", view === "calendar");
   localStorage.setItem(VIEW_KEY, view);
 }
 
-showListButton.addEventListener("click", function () { setView("list"); });
 showRoadmapButton.addEventListener("click", function () { setView("roadmap"); });
+showCalendarButton.addEventListener("click", function () {
+  setView("calendar");
+  // 今の年の行が見えるところまでスクロール（はじめは0歳から並んでいるので）
+  const current = lifeCalendar.querySelector(".cal-row.current");
+  if (current) current.scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
-// 最初は、最後に選んだ見え方にする（何も覚えていなければロードマップ）
-setView(localStorage.getItem(VIEW_KEY) === "list" ? "list" : "roadmap");
+// 最初は、最後に選んだ見え方にする（何も覚えていない・前の版の「一覧」ならロードマップ）
+setView(localStorage.getItem(VIEW_KEY) === "calendar" ? "calendar" : "roadmap");
 
 // ===== 7. 生年月日 =====
 setupForm.addEventListener("submit", function (event) {
@@ -1315,10 +1474,18 @@ dreamForm.addEventListener("submit", function (event) {
   memoInput.value = "";
 });
 
-// 追加したやりたいことを、今見えている一覧かロードマップの中から探して、
+// 追加したやりたいことを、今見えているロードマップかカレンダーの中から探して、
 // そこまでスクロールして一瞬光らせる関数
 function highlightDream(id) {
-  const container = roadmap.hidden ? dreamList : roadmap;
+  // （カレンダーのときは、追加した月を開いて、その中から探す）
+  if (!lifeCalendar.hidden) {
+    const dream = dreams.find(function (d) { return d.id === id; });
+    if (dream && dream.deadline !== null) {
+      openCalendarKey = monthKey(deadlineEnd(dream.deadline));
+      renderCalendar(parseDate(profile.birthdate));
+    }
+  }
+  const container = lifeCalendar.hidden ? roadmap : lifeCalendar;
   const item = container.querySelector('[data-dream-id="' + id + '"]');
   if (!item) return;
   item.scrollIntoView({ behavior: "smooth", block: "center" }); // 画面の真ん中に来るようにスクロール
